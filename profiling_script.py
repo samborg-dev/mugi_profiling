@@ -5,7 +5,7 @@ import torch
 import os
 
 model_name = "meta-llama/Llama-2-7b-hf"
-dataset_name = "c4"
+dataset_name = "allenai/c4"
 dataset_config = "en"
 
 def huggingface_login():
@@ -20,8 +20,7 @@ def huggingface_login():
 def run_inference():
     print(f"Loading model: {model_name}")
     print(f"Loading dataset: {dataset_name}")
-    
-    
+        
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name)
     
@@ -30,8 +29,8 @@ def run_inference():
     
     max_seq_length = model.config.max_position_embeddings
 
-    dataset = load_dataset(f'huggingface/{dataset_name}', dataset_config, split="test")
-    
+    dataset = load_dataset(dataset_name, dataset_config, split="test")
+
     model.eval()
     
     print("\nRunning inference on sample texts...")
