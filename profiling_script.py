@@ -9,10 +9,6 @@ model_name = "meta-llama/Llama-2-7b-hf"
 dataset_name = "allenai/c4"
 dataset_config = "en"
 
-print("Logical CPUs:", len(os.sched_getaffinity(0)))
-print("Physical cores:", multiprocessing.cpu_count())
-exit()
-
 def huggingface_login():
     token = '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'
     try:
@@ -45,7 +41,8 @@ def run_inference():
     
     max_seq_length = model.config.max_position_embeddings
 
-    dataset = load_dataset(dataset_name, dataset_config, split="test")
+    dataset = load_dataset(dataset_name, dataset_config, split="test[:1%]")
+    dataset = dataset.map(tokenizer, batched=True, num_proc=len(os.sched_getaffinity(0)))
 
     model.eval()
     
