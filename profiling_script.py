@@ -1,14 +1,26 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
+from huggingface_hub import login
 import torch
+import os
 
 model_name = "meta-llama/Llama-2-7b-hf"
 dataset_name = "c4"
 dataset_config = "en"
 
+def huggingface_login():
+    token = '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'
+    try:
+        print("Using HF_TOKEN from environment variable")
+        login(token=token)
+    except:
+        print("HF_TOKEN invalid or not set.")
+        exit()
+
 def run_inference():
     print(f"Loading model: {model_name}")
     print(f"Loading dataset: {dataset_name}")
+    
     
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(model_name)
@@ -49,4 +61,5 @@ def run_inference():
     print("\nFinished running inference on sample texts.")
 
 if __name__ == "__main__":
+    huggingface_login()
     run_inference()
