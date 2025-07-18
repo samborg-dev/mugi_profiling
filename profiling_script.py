@@ -9,7 +9,7 @@ model_name = "meta-llama/Llama-2-7b-hf"
 dataset_name = "allenai/c4"
 dataset_config = "en"
 
-print("Logical CPUs:", os.cpu_count())
+print("Logical CPUs:", len(os.sched_getaffinity(0)))
 print("Physical cores:", multiprocessing.cpu_count())
 exit()
 
