@@ -11,8 +11,8 @@ dataset_config = "en"
 def huggingface_login():
     token = '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'
     try:
-        print("Using HF_TOKEN from environment variable")
         login(token=token)
+        print("Successfully logged in to Hugging Face.")
     except:
         print("HF_TOKEN invalid or not set.")
         exit()
