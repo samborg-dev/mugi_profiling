@@ -30,7 +30,7 @@ def run_inference():
     
     max_seq_length = model.config.max_position_embeddings
 
-    dataset = load_dataset(dataset_name, dataset_config, split="test")
+    dataset = load_dataset(f'huggingface/{dataset_name}', dataset_config, split="test")
     
     model.eval()
     
