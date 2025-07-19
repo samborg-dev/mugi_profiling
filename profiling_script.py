@@ -32,17 +32,24 @@ def run_inference():
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
-        torch_dtype=torch.float16,  # Use half precision for memory efficiency
-        device_map="auto"  # Automatically distribute model across available GPUs
+        torch_dtype=torch.float16,
+        device_map="auto"
     )
     
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
     max_seq_length = model.config.max_position_embeddings
+    print(f"Model max sequence length: {max_seq_length}")
 
-    dataset = load_dataset(dataset_name, dataset_config, split="test[:1%]")
-    dataset = dataset.map(tokenizer, batched=True, num_proc=len(os.sched_getaffinity(0)))
+    # Load only a small subset of the dataset to avoid downloading the entire thing
+    print("Loading small subset of dataset...")
+    dataset = load_dataset(dataset_name, dataset_config, split="train[:100]", streaming=True)
+    
+    # Convert streaming dataset to a regular dataset for easier handling
+    dataset = dataset.take(100)
+    dataset = list(dataset)
+    print(f"Loaded {len(dataset)} samples from dataset")
 
     model.eval()
     
