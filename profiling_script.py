@@ -95,10 +95,10 @@ if __name__ == "__main__":
         datasets = value.get("datasets", [])
         models = value.get("models", [])
 
-        for dataset, dataset_config in datasets.items():
-            dataset_name = dataset_config.get("name", None)
-            dataset_config = dataset_config.get("config", None)
-            dataset_split = dataset_config.get("split", None)
+        for dataset, dataset_values in datasets.items():
+            dataset_name = dataset_values.get("name", None)
+            dataset_config = dataset_values.get("config", None)
+            dataset_split = dataset_values.get("split", None)
 
             for model_name in models:
                 print(f"\nRunning inference for model: {model_name} on dataset: {dataset_name}")
