@@ -44,9 +44,9 @@ def run_inference():
 
     # Load only a small subset of the dataset to avoid downloading the entire thing
     print("Loading small subset of dataset...")
-    dataset = load_dataset(dataset_name, dataset_config, split="train[:100]", streaming=True)
+    dataset = load_dataset(dataset_name, dataset_config, split="validation", streaming=True)
     
-    # Convert streaming dataset to a regular dataset for easier handling
+    # Take only the first 100 samples from the streaming dataset
     dataset = dataset.take(100)
     dataset = list(dataset)
     print(f"Loaded {len(dataset)} samples from dataset")
