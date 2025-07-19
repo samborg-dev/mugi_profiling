@@ -102,6 +102,5 @@ if __name__ == "__main__":
 
             for model_name in models:
                 print(f"\nRunning inference for model: {model_name} on dataset: {dataset_name}")
-                exit()
                 run_inference(model_name, dataset_name, dataset_config, dataset_split)
                 exit()
