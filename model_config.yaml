@@ -1,0 +1,49 @@
+nlp:
+  datasets:
+    wikitext:
+      name: mindchain/wikitext211
+      split: validation
+    c4:
+      name: allenai/c4
+      config: en
+      split: validation
+  models:
+    - meta-llama/Llama-3.1-8B
+    - meta-llama/Llama-3.1-70B
+    - meta-llama/Llama-3.1-405B
+audio:
+  datasets:
+    librispeech:
+      name: openslr
+      config: librispeech_asr
+      split: validation
+    common_voice:
+      name: mozilla-foundation/common_voice_17_0
+      split: validation
+  models:
+    - openai/whisper-tiny
+    - openai/whisper-small
+    - openai/whisper-base
+    - openai/whisper-medium
+    - openai/whisper-large
+vision:
+  datasets:
+    imagenet: 
+      name: imagenet-1k
+      split: validation
+    coco:
+      name: coco
+      split: validationa
+  models:
+    - microsoft/swin-tiny-patch4-window7-224
+    - microsoft/swin-small-patch4-window7-224
+    - microsoft/swin-base-patch4-window7-224
+    - microsoft/swin-large-patch4-window7-224
+    - microsoft/dit-base
+    - microsoft/dit-large
+
+video:
+  datasets:
+    - ucf101
+  models:
+    - google/vivit-b-16x2

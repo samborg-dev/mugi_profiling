@@ -2,6 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
 from huggingface_hub import login
 import torch
+import pyyaml
 import os
 import multiprocessing
 
@@ -21,16 +22,18 @@ def huggingface_login():
         print("HF_TOKEN invalid or not set.")
         exit()
     
-def run_inference():
+def run_inference(model_name, dataset_name, dataset_config = None, dataset_split="validation"):
     print(f"Loading model: {model_name}")
     print(f"Loading dataset: {dataset_name}")
     
+    # CUDA device setup
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     if device.type == "cuda":
         print(f"GPU: {torch.cuda.get_device_name(0)}")
         print(f"CUDA version: {torch.version.cuda}")
-        
+    
+    # Load model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
@@ -44,11 +47,10 @@ def run_inference():
     max_seq_length = model.config.max_position_embeddings
     print(f"Model max sequence length: {max_seq_length}")
 
-    # Load only a small subset of the dataset to avoid downloading the entire thing
-    print("Loading small subset of dataset...")
-    dataset = load_dataset(dataset_name, dataset_config, split="validation", streaming=True)
+    # Load Dataset
+    dataset = load_dataset(dataset_name, dataset_config, split=dataset_split, streaming=True)
     
-    # Take only the first 100 samples from the streaming dataset
+    # Temp Testing on first 100 samples
     dataset = dataset.take(100)
     dataset = list(dataset)
     print(f"Loaded {len(dataset)} samples from dataset")
@@ -69,12 +71,8 @@ def run_inference():
             continue
         
         # Move inputs to the same device as model
-        inputs = tokenizer.encode(sample_text, return_tensors="pt", truncation=True, max_length=100)
+        inputs = tokenizer.encode(sample_text, return_tensors="pt", truncation=True, max_length=max_seq_length)
         inputs = inputs.to(device)
-        
-        print(f"\n--- Sample {i+1} ---")
-        print(f"Input length: {inputs.shape[1]} tokens")
-        print(f"Input preview: {sample_text[:200]}...")
         
         with torch.no_grad():
             outputs = model.generate(
@@ -89,4 +87,20 @@ def run_inference():
 
 if __name__ == "__main__":
     huggingface_login()
-    run_inference()
+
+    with open("model_config.yaml", "r") as f:
+        config = pyyaml.safe_load(f)
+
+    for key, value in config.items():
+        datasets = value.get("datasets", [])
+        models = value.get("models", [])
+
+        for dataset, dataset_config in datasets.items():
+            dataset_name = dataset_config.get("name", None)
+            dataset_config = dataset_config.get("config", None)
+            dataset_split = dataset_config.get("split", None)
+
+            for model_name in models:
+                print(f"\nRunning inference for model: {model_name} on dataset: {dataset_name}")
+                run_inference(model_name, dataset_name, dataset_config, dataset_split)
+                exit()
