@@ -10,6 +10,9 @@ dataset_name = "allenai/c4"
 dataset_config = "en"
 
 def huggingface_login():
+    """
+    Login to Hugging Face.
+    """
     token = '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'
     try:
         login(token=token)
@@ -17,12 +20,11 @@ def huggingface_login():
     except:
         print("HF_TOKEN invalid or not set.")
         exit()
-
+    
 def run_inference():
     print(f"Loading model: {model_name}")
     print(f"Loading dataset: {dataset_name}")
     
-    # Check for CUDA availability
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     if device.type == "cuda":
@@ -77,16 +79,11 @@ def run_inference():
         with torch.no_grad():
             outputs = model.generate(
                 inputs,
-                max_new_tokens=50,  # Added back max_new_tokens for controlled generation
                 num_return_sequences=1,
-                temperature=0.7,  # Added back temperature for better generation
-                do_sample=True,  # Added back sampling
                 pad_token_id=tokenizer.eos_token_id
             )
         
         generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print(f"Generated: {generated_text}")
-        print("-" * 50)
 
     print("\nFinished running inference on sample texts.")
 
