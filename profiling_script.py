@@ -34,7 +34,7 @@ def run_inference(model_name, dataset_name, dataset_config = None, dataset_split
         print(f"CUDA version: {torch.version.cuda}")
     
     # Load model and tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(model_name, legacy=False)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         torch_dtype=torch.float16,
