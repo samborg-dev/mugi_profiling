@@ -1,7 +1,8 @@
 nlp:
   datasets:
     wikitext:
-      name: mindchain/wikitext211
+      name: wikitext
+      config: wikitext-2-raw-v1
       split: validation
     c4:
       name: allenai/c4

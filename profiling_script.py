@@ -21,7 +21,7 @@ def huggingface_login():
     except:
         print("HF_TOKEN invalid or not set.")
         exit()
-    
+
 def run_inference(model_name, dataset_name, dataset_config = None, dataset_split="validation"):
     print(f"Loading model: {model_name}")
     print(f"Loading dataset: {dataset_name}")
