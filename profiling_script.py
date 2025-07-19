@@ -2,7 +2,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from datasets import load_dataset
 from huggingface_hub import login
 import torch
-import pyyaml
+import yaml
 import os
 import multiprocessing
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     huggingface_login()
 
     with open("model_config.yaml", "r") as f:
-        config = pyyaml.safe_load(f)
+        config = yaml.safe_load(f)
 
     for key, value in config.items():
         datasets = value.get("datasets", [])
