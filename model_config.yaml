@@ -11,6 +11,9 @@ nlp:
     - meta-llama/Llama-3.1-8B
     # - meta-llama/Llama-3.1-70B
     # - meta-llama/Llama-3.1-405B
+  nonlinear:
+    - softmax
+    - silu
 audio:
   datasets:
     librispeech:

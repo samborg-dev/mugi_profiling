@@ -204,6 +204,8 @@ def evaluate_model(model_dict, dataset_dict, parameter_dict):
     return result, metric_name
 
 def main():
+    print('hi')
+    exit()
     config = yaml.safe_load(open('model_config.yaml'))
     parameter_dict = yaml.safe_load(open('parameter_config.yaml'))
 
