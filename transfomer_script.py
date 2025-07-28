@@ -7,6 +7,7 @@ import yaml
 import pandas as pd
 import itertools
 import os
+import argparse
 from tqdm import tqdm
 from huggingface_hub import login
 from utils import process_nlp_dataset, process_audio_dataset, process_image_dataset, process_video_dataset
@@ -702,11 +703,16 @@ def huggingface_login():
         exit()
 
 def main():
+    parser = argparse.ArgumentParser(description='Run transformer model profiling')
+    parser.add_argument('--config', type=str, default='model_config.yaml', 
+                        help='Path to model config YAML file (default: model_config.yaml)')
+    args = parser.parse_args()
+    
     # for debugging
     # torch.set_printoptions(threshold=float('inf'))
     huggingface_login()
 
-    config = yaml.safe_load(open('model_config.yaml'))
+    config = yaml.safe_load(open(args.config))
     parameter_dict = yaml.safe_load(open('parameter_config.yaml'))
     nonlinear_config = yaml.safe_load(open('nonlinear_test.yaml'))
 

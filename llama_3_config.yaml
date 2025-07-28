@@ -1,0 +1,13 @@
+nlp:
+  datasets:
+    c4:
+      dataset: allenai/c4
+      config: en
+      split: validation
+  models:
+    - meta-llama/Llama-3.1-8B
+    - meta-llama/Llama-3.1-70B
+    - meta-llama/Llama-3.1-405B
+  nonlinear:
+    attention: softmax
+    ffn: silu
