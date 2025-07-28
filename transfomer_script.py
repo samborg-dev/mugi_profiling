@@ -373,7 +373,7 @@ def loop_configurations(batched_data, model_type, model, tok_proc, attention_ope
                 ffn_config['path'] = os.path.join(
                     "profile",
                     ffn_config['path'],
-                    f"{model.config._name_or_path}"
+                    os.path(str(model.config._name_or_path))
             )
             for key, value in ffn_config.items():
                 if not isinstance(value, list):
