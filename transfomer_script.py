@@ -693,7 +693,7 @@ def evaluate_model(model_dict, dataset_dict, parameter_dict, nonlinear_operation
     del model, tok_proc, processed_dataset, batched_data
     torch.cuda.empty_cache()
     
-    save_path = f"results/{model_type}/{model_name}/"
+    save_path = os.path(f"results/{model_type}/{model_name}/")
     if not os.path.exists(save_path):
         os.makedirs(save_path)
     metric_df.to_csv(f"{save_path}.csv", index=False)
