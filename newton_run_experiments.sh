@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # newton slerm parameters
-#SBATCH --cpus-per-task=32
+
+#SBATCH --cpus-per-task=8
 #SBATCH --time=1:00:00
-#SBATCH --gres=gpu:8
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=trasformer_profiling_test
-#SBATCH --error=transformer_profiling_test.err
-#SBATCH --output=transformer_profiling_test.out
+#SBATCH --error=transformer_profiling_test.txt
+#SBATCH --output=transformer_profiling_test.txt
 
 module load python
 module load anaconda
