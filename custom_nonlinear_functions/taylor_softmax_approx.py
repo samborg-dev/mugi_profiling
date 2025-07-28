@@ -1,18 +1,24 @@
 import torch
 import math
 from custom_approx import CustomSoftmax
+import os
 
 # Code functions with fp16 precision as input / output, and is not tested for other datatypes.
 # Edit a to adjust degree center
 # Edit degrees to adjust number of polynomial degrees
 
 class TaylorSoftmax(CustomSoftmax):
-    def __init__(self, degree_center, degrees, device, path, save_dims, profile):
-        super(TaylorSoftmax, self).__init__(device, path, save_dims, profile)
+    def __init__(self, degree_center, degrees, device, path, save_dims, profile, torch_nonlinear):
+        super(TaylorSoftmax, self).__init__(device, path, save_dims, profile, torch_nonlinear)
         self.degree_center = degree_center
         self.degrees = degrees
         self.device = device
 
+        self.build_taylor()
+
+    def reset_taylor(self, degree_center, degrees):
+        self.degree_center = degree_center
+        self.degrees = degrees
         self.build_taylor()
 
     def build_taylor(self):

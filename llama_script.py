@@ -30,12 +30,12 @@ vlp_build = 'max'
 save_dims = [1024, 2048, 4096]
 
 # ----- Load custom nonlinear functions -----
-# softmax = vlp_softmax_approx.VLPSoftmax(exp_dim=softmax_exp_dim, max_exp=softmax_max_exp, min_exp=softmax_min_exp, window_size=window_size, lut_build=vlp_build, device=device, path='profile/vlp/softmax/', save_dims=save_dims, profile=True)
-# silu = vlp_silu_approx.VLPSilu(exp_dim=silu_exp_dim, max_pos_exp=silu_max_exp, max_neg_exp=silu_max_exp, window_size=window_size, device=device)
+softmax = vlp_softmax_approx.VLPSoftmax(exp_dim=softmax_exp_dim, max_exp=softmax_max_exp, min_exp=softmax_min_exp, window_size=window_size, lut_build=vlp_build, device=device, path='profile/vlp/softmax/', save_dims=save_dims, profile=True)
+silu = vlp_silu_approx.VLPSilu(exp_dim=silu_exp_dim, max_pos_exp=silu_max_exp, max_neg_exp=silu_max_exp, window_size=window_size, device=device)
 softmax = pwl_softmax_approx.PWLSoftmax(segments=segments, segment_0=segment_0, device=device, path='profile/pwl/softmax/', save_dims=save_dims, profile=True)
-# silu = pwl_silu_approx.PWLSilu(segments=segments, segment_0=segment_0, device=device, path='profile/pwl/silu/', save_dims=save_dims, profile=False)
-# silu = pwl_mobilenet_approx.PWLMobilenet(device=device, path='profile/pwl/mobilenet/', save_dims=save_dims, profile=False)
-# softmax = taylor_softmax_approx.TaylorSoftmax(degree_center=degree_center, degrees=degrees, device=device, path='profile/taylor/softmax/', save_dims=save_dims, profile=False)
+silu = pwl_silu_approx.PWLSilu(segments=segments, segment_0=segment_0, device=device, path='profile/pwl/silu/', save_dims=save_dims, profile=False)
+silu = pwl_mobilenet_approx.PWLMobilenet(device=device, path='profile/pwl/mobilenet/', save_dims=save_dims, profile=False)
+softmax = taylor_softmax_approx.TaylorSoftmax(degree_center=degree_center, degrees=degrees, device=device, path='profile/taylor/softmax/', save_dims=save_dims, profile=False)
 
 # ----- Patch Softmax Function -----
 torch.nn.functional.softmax = softmax.forward

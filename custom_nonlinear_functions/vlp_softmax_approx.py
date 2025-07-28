@@ -1,12 +1,13 @@
 import torch
 from custom_approx import CustomSoftmax
+import os
 
 # Code functions with fp16 precision as input / output, and is not tested for other datatypes.
 # Edit exp_dim to adjust the LUT size
 # Edit max exp to adjust the maximum exponent of the LUT
 class VLPSoftmax(CustomSoftmax):
-    def __init__(self, exp_dim, max_exp, min_exp, window_size, lut_build, device, path, save_dims, profile):
-        super(VLPSoftmax, self).__init__(device, path, save_dims, profile)
+    def __init__(self, exp_dim, max_exp, min_exp, window_size, lut_build, device, path, save_dims, profile, torch_nonlinear):
+        super(VLPSoftmax, self).__init__(device, path, save_dims, profile, torch_nonlinear)
         # Exponent dimension of virtual LUT and maximum exponent for setting LUT range
         self.exp_dim = exp_dim
         self.max_exp = max_exp
@@ -29,7 +30,6 @@ class VLPSoftmax(CustomSoftmax):
     def build_lut(self):
         # Mantissa dimension of virtual LUT
         mant_dim = 8
-
         # set exp range by selected exp (max_exp or min_exp)
         if self.lut_build == "max":
             self.min_exp = self.max_exp - (self.exp_dim - 1)
@@ -128,34 +128,36 @@ class VLPSoftmax(CustomSoftmax):
         attn_weights = attn_weights.to(torch.bfloat16)
         # Find the max value and subtract it to prevent overflow (max value is 0)
         attn_weights_max = torch.max(attn_weights, dim = dim, keepdim = True)[0]
-        attn_weights_shifted = attn_weights - attn_weights_max
+        attn_weights = attn_weights - attn_weights_max
+
+        del attn_weights_max  # Free memory immediately
 
         # Split exponent and signed mantissa, bitshift mantissa to 4 bits (assumes leading 0).
-        mant_frexp, exp_frexp = torch.frexp(attn_weights_shifted)
-        mant_bit_shift = torch.round(mant_frexp * 16)
+        mant, exp = torch.frexp(attn_weights)
+        mant = torch.round(mant * 16)
 
         # Increment exponent where mantissa has overflow (i.e., mantissa is 16 / needs)
-        exp = torch.where(attn_weights_shifted == 0, exp_frexp, exp_frexp - 1)
-        exp_rounded = torch.where(torch.abs(mant_bit_shift) == 16, exp + 1, exp)
+        exp = torch.where(attn_weights == 0, exp, exp - 1)
+        exp = torch.where(torch.abs(mant) == 16, exp + 1, exp)
 
         # Convert mantissa to unsigned 3 bit integer
-        mant = torch.abs(mant_bit_shift.to(torch.int64)) & 0x7
+        mant = torch.abs(mant.to(torch.int64)) & 0x7
         
         # Remove inf values to increase window selection stability
-        exp_preclamp = torch.where((torch.isinf(attn_weights)) | (attn_weights_shifted <= -65500.0), 0, exp_rounded)
+        exp_processed = torch.where((torch.isinf(attn_weights)) | (attn_weights <= -65500.0), 0, exp)
 
         # Increase exponent size for stability
-        exp_preclamp = exp_preclamp.to(torch.int64)
+        exp_processed = exp_processed.to(torch.int64)
         
         # Clamp exponent and adjust mantissa to fit within LUT range
-        exp_clamped, mant = self.window_softmax_approx(exp_preclamp, mant)
+        exp_processed, mant = self.window_softmax_approx(exp, mant)
 
         # Postprocess 0 case and large exponent case
-        exponentials = torch.where(attn_weights_shifted == 0, 1, self.lut[exp_clamped, mant])
-        exponentials = torch.where(exp_rounded > self.max_exp, 0, exponentials)
+        exponentials = torch.where(attn_weights == 0, 1, self.lut[exp_processed, mant])
+        exponentials = torch.where(exp > self.max_exp, 0, exponentials)
         
         # Calculate softmax output
-        exponential_summations = torch.sum(exponentials, dim = dim, keepdim = True)
-        softmax_output = exponentials / exponential_summations
+        attn_weights = torch.sum(exponentials, dim = dim, keepdim = True)
+        attn_weights = exponentials / attn_weights
 
-        return softmax_output
+        return attn_weights

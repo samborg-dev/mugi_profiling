@@ -1,0 +1,8 @@
+# Ignore profiling data
+profile/
+
+# Ignore result outputs
+results/
+
+# Ignore null output or temp dir
+null/

@@ -1,0 +1,36 @@
+torch:
+  attention:
+    path: 'torch/attention/'
+  ffn:
+    path: 'torch/ffn/'
+vlp:
+  attention:
+    exp_dim: 12
+    max_exp: 2
+    min_exp: 0
+    window_size: 8
+    lut_build: 'max'
+    path: 'vlp/attention/'
+  ffn:
+    exp_dim: 12
+    max_pos_exp: 1
+    max_neg_exp: 1
+    window_size: 8
+    path: 'vlp/ffn/'
+pwl:
+  attention:
+    segments: 20
+    segment_0: -20
+    path: 'pwl/attention/'
+  ffn:
+    segments: 20
+    segment_0: 6
+    path: 'pwl/ffn/'
+pwl_mobilenet:
+  ffn:
+    path: 'pwl_mobilenet/ffn/'
+taylor:
+  attention:
+    degree_center: -6
+    degrees: 10
+    path: 'taylor/attention/'

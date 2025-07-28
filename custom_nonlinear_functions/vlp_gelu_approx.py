@@ -1,17 +1,17 @@
 import torch
 from custom_approx import CustomGelu
+import os
 
 # Code functions with fp16 precision as input / output, and is not tested for other datatypes.
 # Edit exp_dim to adjust the LUT size
 # Edit max exp to adjust the maximum exponent of the LUT
 class VLPGelu(CustomGelu):
-    def __init__(self, exp_dim, max_pos_exp, max_neg_exp, window_size, device):
-        super(VLPGelu, self).__init__()
+    def __init__(self, exp_dim, max_pos_exp, max_neg_exp, window_size, device, path, save_dims, profile, torch_nonlinear):
+        super(VLPGelu, self).__init__(device, path, save_dims, profile, torch_nonlinear)
         self.exp_dim = exp_dim
         self.max_pos_exp = max_pos_exp
         self.max_neg_exp = max_neg_exp
         self.window_size = window_size
-        self.device = device
         self.build_lut()
 
     def reset_lut(self, exp_dim, max_pos_exp, max_neg_exp, window_size):
@@ -47,7 +47,7 @@ class VLPGelu(CustomGelu):
         lookup_table = torch.ldexp(mant_table, exp_table)
 
         # apply exp to create LUT
-        self.pos_lut = torch.nn.functional.gelu(lookup_table).to(torch.bfloat16).to(self.device)
+        self.pos_lut = self.torch_nonlinear(lookup_table).to(torch.bfloat16).to(self.device)
 
     def build_neg_lut(self):
         # Mantissa dimension of virtual LUT
@@ -71,7 +71,7 @@ class VLPGelu(CustomGelu):
         lookup_table = torch.ldexp(mant_table, exp_table)
 
         # apply exp to create LUT
-        self.neg_lut = torch.nn.functional.gelu(lookup_table).to(torch.bfloat16).to(self.device)
+        self.neg_lut = self.torch_nonlinear(lookup_table).to(torch.bfloat16).to(self.device)
 
     def window_gelu_approx(self, exp, mant):
         input_shape = exp.shape

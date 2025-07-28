@@ -1,18 +1,25 @@
 import torch
 from custom_approx import CustomSoftmax
+import os
 
 # Code functions with fp16 precision as input / output, and is not tested for other datatypes.
 # Edit segments to adjust the number of piecewise linear segments
 # Edit segment_0 to set range (softmax range is set from segment_0 to 0 ex. -20 = [-20, 0])
 
 class PWLSoftmax(CustomSoftmax):
-    def __init__(self, segments, segment_0, device, path, save_dims, profile):
-        super(PWLSoftmax, self).__init__(device, path, save_dims, profile)
+    def __init__(self, segments, segment_0, device, path, save_dims, profile, torch_nonlinear):
+        super(PWLSoftmax, self).__init__(device, path, save_dims, profile, torch_nonlinear)
         self.segments = segments - 1
-        self.segment_0 = -segment_0
+        self.segment_0 = segment_0
         self.segment_f = 0
         self.device = device
 
+        self.build_lut()
+
+    def reset_lut(self, segments, segment_0):
+        self.segments = segments - 1
+        self.segment_0 = -segment_0
+        self.segment_f = 0
         self.build_lut()
 
     def build_lut(self):
