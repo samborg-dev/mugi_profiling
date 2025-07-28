@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# newton slerm parameters
+#SBATCH --cpus-per-task=32
+#SBATCH --mem=128G
+#SBATCH --time=1:00:00
+#SBATCH --gres=gpu:8
+#SBATCH --job-name=trasformer_profiling_test
+#SBATCH --error=transformer_profiling_test.err
+#SBATCH --output=transformer_profiling_test.out
+
+module load python
+module load anaconda
+module load cuda
+
+conda deactivate
+conda activate mugi_profiling
+
+cd ~/mugi_profiling
 
 # Configuration files to process
 configs=("small_models_config.yaml")
