@@ -356,7 +356,11 @@ def loop_configurations(batched_data, model_type, model, tok_proc, attention_ope
 
         if attention_config is not None:
             if 'profile' not in attention_config['path']:
-                attention_config['path'] = os.path.join("profile/", attention_config['path'], f"{model.config._name_or_path}")
+                attention_config['path'] = os.path.join(
+                "profile",
+                attention_config['path'],
+                f"{model.config._name_or_path}"
+            )
             for key, value in attention_config.items():
                 if not isinstance(value, list):
                     attention_config[key] = [value]
@@ -366,9 +370,9 @@ def loop_configurations(batched_data, model_type, model, tok_proc, attention_ope
 
         if ffn_config is not None:
             if 'profile' not in ffn_config['path']:
-                attention_config['path'] = os.path.join(
+                ffn_config['path'] = os.path.join(
                     "profile",
-                    attention_config['path'],
+                    ffn_config['path'],
                     f"{model.config._name_or_path}"
             )
             for key, value in ffn_config.items():
