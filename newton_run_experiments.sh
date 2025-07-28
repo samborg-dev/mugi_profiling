@@ -2,9 +2,9 @@
 
 # newton slerm parameters
 
-#SBATCH --cpus-per-task=8
-#SBATCH --time=1:00:00
-#SBATCH --gres=gpu:1
+SBATCH --cpus-per-task=8
+SBATCH --time=1:00:00
+SBATCH --gres=gpu:1
 #SBATCH --job-name=trasformer_profiling_test
 #SBATCH --error=transformer_profiling_test.txt
 #SBATCH --output=transformer_profiling_test.txt
