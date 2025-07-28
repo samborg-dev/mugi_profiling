@@ -28,4 +28,6 @@ for config in "${configs[@]}"; do
     fi
     
     echo "----------------------------------------"
+
+    rm -rf ~/.cache/huggingface
 done
