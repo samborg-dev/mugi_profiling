@@ -1,0 +1,11 @@
+dataset:
+  name: c4
+  hf_path: allenai/c4
+  config: en
+  split: validation
+model: 
+  name: meta-llama/Llama-2-7b-hf
+  modality: nlp
+nonlinear:
+  attention: softmax
+  ffn: silu

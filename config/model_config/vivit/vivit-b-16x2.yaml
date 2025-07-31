@@ -1,0 +1,10 @@
+dataset:
+  name: kinetics
+  hf_path: nateraw/kinetics
+  split: validation
+model: 
+  name: google/vivit-b-16x2
+  modality: video
+nonlinear:
+  attention: softmax
+  ffn: fast_gelu

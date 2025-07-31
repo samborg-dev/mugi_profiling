@@ -2,32 +2,47 @@
 
 
 # Configuration files to process
-configs=("small_models_config.yaml")
+# model_configs=("config/model_config/llama/llama_2_7b.yaml")
+# model_configs=("config/model_config/swin/swinv2_tiny.yaml")
+# model_configs=("config/model_config/whisper/whisper_tiny.yaml")
+# model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
+nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
+parameter_config="config/parameter_config/parameter_config.yaml"
+hf_token="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"
+
+huggingface-cli login --token "$hf_token"
+
+dir="config/model_config/"
 
 # Loop through each configuration
-for config in "${configs[@]}"; do
-    echo ""
-    echo "Running experiment with configuration: $config"
-    echo "----------------------------------------"
-    
-    # Check if config file exists
-    if [ ! -f "$config" ]; then
-        echo "Warning: Configuration file '$config' not found. Skipping..."
-        continue
-    fi
-    
-    # Run the transformer script with the current config
-    python transfomer_script.py --config "$config"
-    
-    # Check if the script ran successfully
-    if [ $? -eq 0 ]; then
-        echo "✓ Successfully completed experiment with $config"
-    else
-        echo "✗ Error occurred while running experiment with $config"
-        echo "Continuing with next configuration..."
-    fi
-    
-    echo "----------------------------------------"
+for sub_dir in "$dir"/*; do
+    for model_config in "$sub_dir"/*; do
+        echo ""
+        echo "Running experiment with configuration: $model_config"
+        echo "----------------------------------------"
+        
+        # Check if config file exists
+        if [ ! -f "$model_config" ]; then
+            echo "Warning: Configuration file '$model_config' not found. Skipping..."
+            continue
+        fi
+        
+        # Run the transformer script with the current config
+        python model_script.py --model_config "$model_config" \
+                                    --nonlinear_config "$nonlinear_config" \
+                                    --parameter_config "$parameter_config" #\
+                                    #--hf_token "$hf_token"
+        
+        # Check if the script ran successfully
+        if [ $? -eq 0 ]; then
+            echo "✓ Successfully completed experiment with $model_config"
+        else
+            echo "✗ Error occurred while running experiment with $model_config"
+            echo "Continuing with next configuration..."
+        fi
+        
+        echo "----------------------------------------"
 
-    rm -rf ~/.cache/huggingface
+        # rm -rf ~/.cache/huggingface
+    done
 done

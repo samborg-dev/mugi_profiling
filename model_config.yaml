@@ -28,7 +28,7 @@ audio:
   nonlinear:
     attention: softmax
     ffn: gelu
-vision_1:
+vision:
   datasets:
     imagenet-1k:
       dataset: imagenet-1k

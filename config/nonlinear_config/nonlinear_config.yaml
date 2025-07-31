@@ -1,0 +1,52 @@
+functions:
+  torch:
+    attention:
+      - softmax
+    ffn:
+      - silu
+      - gelu
+      - fast_gelu
+  vlp:
+    attention:
+      - softmax
+    ffn:
+      - silu
+      - gelu
+      - fast_gelu
+  pwl:
+    attention:
+      - softmax
+    ffn:
+      - silu
+      - gelu
+      - fast_gelu
+  pwl_mobilenet:
+    ffn:
+      - silu
+  taylor:
+    attention:
+      - softmax
+params:
+  vlp:
+    attention:
+      exp_dim: [8, 12]
+      max_exp: [-4, 4]
+      min_exp: [-7, 1]
+      window_size: 8
+      lut_build: ['max', 'min']
+    ffn:
+      exp_dim: [8, 12]
+      max_pos_exp: [-4, 4]
+      min_pos_exp: [-7, 1]
+      window_size: 8
+  pwl:
+    attention:
+      segments: [6, 26]
+      segment_0: [2, 26]
+    ffn:
+      segments: [6, 26]
+      segment_0: [2, 26]
+  taylor:
+    attention:
+      degree_center: [-10, 10]
+      degrees: [2, 26]
