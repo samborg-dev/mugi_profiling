@@ -9,8 +9,8 @@ hf_token="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"
 huggingface-cli login --token "$hf_token"
 
 # Create results file with timestamp
-results_file="experiment_results_$(date +%Y%m%d_%H%M%S).txt"
-echo "Experiment Results - $(date)" > "$results_file"
+results_file="experiment_results.txt"
+echo "Experiment Results" > "$results_file"
 echo "=======================================" >> "$results_file"
 echo "" >> "$results_file"
 
