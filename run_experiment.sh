@@ -2,8 +2,8 @@
 
 
 # Configuration files to process
-model_configs=("config/model_config/llama/llama_3_8b.yaml")
-# model_configs=("config/model_config/swin/swinv2_tiny.yaml")
+# model_configs=("config/model_config/llama/llama_3_8b.yaml")
+model_configs=("config/model_config/swin/swinv2_tiny.yaml")
 # model_configs=("config/model_config/whisper/whisper_tiny.yaml")
 # model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
