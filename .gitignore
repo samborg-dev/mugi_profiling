@@ -6,3 +6,7 @@ results/
 
 # Ignore null output or temp dir
 null/
+
+*.pyc
+*.pyo
+*.pyd
