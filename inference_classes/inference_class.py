@@ -136,6 +136,7 @@ class InferenceModel:
         gc.collect()
 
         print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
+        print(torch.cuda.get_device_properties(self.device).total_memory)
 
         attention_default_classes = [CustomSoftmax]
         ffn_default_classes = [CustomSilu, CustomGelu, CustomFastGelu]
