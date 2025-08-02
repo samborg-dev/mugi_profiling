@@ -9,3 +9,5 @@ model:
 nonlinear:
   attention: softmax
   ffn: silu
+parameters:
+  batch_size: 1

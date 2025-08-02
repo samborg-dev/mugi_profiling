@@ -40,10 +40,10 @@ class PWLSilu(CustomSilu):
 
         mask = (x.unsqueeze(-1) >= self.x_segments[:-1])
         coeffs = mask * (self.m.unsqueeze(0) * x.unsqueeze(-1) + self.b.unsqueeze(0))
-        segment_indices = mask.long().sum(dim=-1) - 1
-        segment_indices = torch.clamp(segment_indices, 0, len(self.m)-1)
+        mask = mask.long().sum(dim=-1) - 1
+        mask = torch.clamp(mask, 0, len(self.m)-1)
 
-        silu_output = torch.gather(coeffs, -1, segment_indices.unsqueeze(-1)).squeeze(-1).to(torch.bfloat16)
+        silu_output = torch.gather(coeffs, -1, mask.unsqueeze(-1)).squeeze(-1).to(torch.bfloat16)
         silu_output = torch.where(x < self.x_segments[0], 0, silu_output).to(torch.bfloat16)
         silu_output = torch.where(x >= self.x_segments[-1], x, silu_output).to(torch.bfloat16)
 

@@ -3,9 +3,9 @@
 
 # Configuration files to process
 # model_configs=("config/model_config/llama/llama_2_7b.yaml")
-# model_configs=("config/model_config/swin/swinv2_tiny.yaml")
+model_configs=("config/model_config/swin/swinv2_tiny.yaml")
 # model_configs=("config/model_config/whisper/whisper_tiny.yaml")
-model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
+# model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"

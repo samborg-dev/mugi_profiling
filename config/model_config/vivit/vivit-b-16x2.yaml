@@ -8,3 +8,5 @@ model:
 nonlinear:
   attention: softmax
   ffn: fast_gelu
+parameters:
+  batch_size: 2
