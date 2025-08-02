@@ -144,9 +144,9 @@ class VLPSilu(CustomSilu):
         neg_mant_window = neg_mant_window.view(-1, input_shape[-1])
 
         pos_exp_window = pos_exp_window[:inter_shape[0], :]
-        pos_mant_window = pos_mant_window[:inter_shape.shape[0], :]
-        neg_exp_window = neg_exp_window[:inter_shape.shape[0], :]
-        neg_mant_window = neg_mant_window[:inter_shape.shape[0], :]
+        pos_mant_window = pos_mant_window[:inter_shape[0], :]
+        neg_exp_window = neg_exp_window[:inter_shape[0], :]
+        neg_mant_window = neg_mant_window[:inter_shape[0], :]
 
         pos_exp_window = pos_exp_window.view(*input_shape)
         pos_mant_window = pos_mant_window.view(*input_shape)

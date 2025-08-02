@@ -1,17 +1,3 @@
-# TODO:
-#
-# test each step on all model types (llama2, llama3.1, whisper, swinv2, vivit)
-# Run only 1 model at a time (e.g. llama 2 7b)
-#
-# 1. Load model config, nonlinear config, and inference parameters
-# 2. Load model, dataset, tokenizer, processor, etc.
-# 3. Batch dataset and preprocess
-# 4. Loop through nonlinear configuration
-# 5. Run inference
-# 6. Profile with custom attention and ffn (by layer and seq len)
-# 7. save ppl / loss
-# 8. exit
-
 import argparse
 import yaml
 import torch
