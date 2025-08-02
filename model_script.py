@@ -53,12 +53,18 @@ def evaluate_model(model_dict, nonlinear_dict, parameter_dict):
 
         inference_model.df = None
 
+        print('Loading model')
         inference_model.load_model()
+        print('Loading dataset')
         inference_model.load_streaming_dataset()
+        print('Processing dataset')
         inference_model.process_dataset()
+        print('Batching dataset')
         inference_model.batch_dataset()
         inference_model.set_profiling_dims()
+        print('Looping through configurations')
         inference_model.loop_configuration()
+        print('Saving results')
 
         inference_model.df.to_csv(inference_model.csv_file, index=False)
 
