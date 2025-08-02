@@ -8,6 +8,12 @@ hf_token="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"
 
 huggingface-cli login --token "$hf_token"
 
+# Create results file with timestamp
+results_file="experiment_results_$(date +%Y%m%d_%H%M%S).txt"
+echo "Experiment Results - $(date)" > "$results_file"
+echo "=======================================" >> "$results_file"
+echo "" >> "$results_file"
+
 dir="config/model_config/"
 
 # Loop through each configuration
@@ -32,8 +38,10 @@ for sub_dir in "$dir"/*; do
         # Check if the script ran successfully
         if [ $? -eq 0 ]; then
             echo "✓ Successfully completed experiment with $model_config"
+            echo "PASSED: $model_config" >> "$results_file"
         else
             echo "✗ Error occurred while running experiment with $model_config"
+            echo "FAILED: $model_config" >> "$results_file"
             echo "Continuing with next configuration..."
         fi
         
@@ -42,3 +50,9 @@ for sub_dir in "$dir"/*; do
         # rm -rf ~/.cache/huggingface
     done
 done
+
+# Add summary to results file
+echo "" >> "$results_file"
+echo "=======================================" >> "$results_file"
+echo "Experiment completed at $(date)" >> "$results_file"
+echo "Results saved to: $results_file"
