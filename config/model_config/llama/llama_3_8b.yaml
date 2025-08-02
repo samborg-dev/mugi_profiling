@@ -4,10 +4,10 @@ dataset:
   config: en
   split: validation
 model: 
-  name: meta-llama/Llama-2-7b-hf
+  name: meta-llama/Llama-3.1-8B
   modality: nlp
 nonlinear:
   attention: softmax
   ffn: silu
 parameters:
-  batch_size: 2
+  batch_size: 1
