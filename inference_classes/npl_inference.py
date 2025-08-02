@@ -17,6 +17,8 @@ class NLPModel(InferenceModel):
             self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager', device_map='auto').to(self.device)
         self.max_length = self.model.config.max_position_embeddings
+        if self.max_length > 16384:
+            self.max_length = 16384
 
     def process_dataset(self):
         self.inputs = []

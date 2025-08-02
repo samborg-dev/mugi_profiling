@@ -38,12 +38,20 @@ class PWLSilu(CustomSilu):
     def nonlinear(self, x):
         x = x.to(torch.bfloat16)
 
-        mask = (x.unsqueeze(-1) >= self.x_segments[:-1])
-        coeffs = mask * (self.m.unsqueeze(0) * x.unsqueeze(-1) + self.b.unsqueeze(0))
-        mask = mask.long().sum(dim=-1) - 1
-        mask = torch.clamp(mask, 0, len(self.m)-1)
+        segment_indices = torch.clamp(x, min=self.x_segments[0], max=self.x_segments[-2])
+        segment_indices = torch.bucketize(segment_indices, self.x_segments, right=True)
+        segment_indices -= 1
+        segment_indices = torch.clamp(segment_indices, 0, self.segments - 1)
+        
+        m = self.m[segment_indices]
+        b = self.b[segment_indices]
+        silu_output = m * x + b
 
-        silu_output = torch.gather(coeffs, -1, mask.unsqueeze(-1)).squeeze(-1).to(torch.bfloat16)
+        # mask = (x.unsqueeze(-1) >= self.x_segments[:-1])
+        # coeffs = mask * (self.m.unsqueeze(0) * x.unsqueeze(-1) + self.b.unsqueeze(0))
+        # mask = mask.long().sum(dim=-1) - 1
+        # mask = torch.clamp(mask, 0, len(self.m)-1)
+
         silu_output = torch.where(x < self.x_segments[0], 0, silu_output).to(torch.bfloat16)
         silu_output = torch.where(x >= self.x_segments[-1], x, silu_output).to(torch.bfloat16)
 

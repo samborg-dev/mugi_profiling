@@ -40,10 +40,14 @@ class PWLSoftmax(CustomSoftmax):
         attn_weights = attn_weights - attn_weights_max
         del attn_weights_max
 
-        mask = (attn_weights.unsqueeze(-1) >= self.x_segments[:-1])
-        mask = mask * (self.m.unsqueeze(0) * attn_weights.unsqueeze(-1) + self.b.unsqueeze(0))
-        attn_weights_exp = mask.max(dim=-1).values
-        del mask
+        segment_indices = torch.clamp(attn_weights, min=self.x_segments[0], max=self.x_segments[-2])
+        segment_indices = torch.bucketize(segment_indices, self.x_segments, right=True)
+        segment_indices -= 1
+        segment_indices = torch.clamp(segment_indices, 0, self.segments - 1)
+        
+        m = self.m[segment_indices]
+        b = self.b[segment_indices]
+        attn_weights_exp = m * attn_weights + b
 
         attn_weights_exp = torch.where(attn_weights < self.x_segments[0], 0, attn_weights_exp)
         attn_weights_exp = torch.where(attn_weights > self.x_segments[-1], self.m[-1] * attn_weights + self.b[-1], attn_weights_exp)
