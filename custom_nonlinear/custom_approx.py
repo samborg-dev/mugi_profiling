@@ -95,13 +95,17 @@ class CustomSoftmax(CustomNonlinear):
         super().__init__(layer, device, profile_path, profile_dims, blocks)
 
     def forward(self, attn_weights, dim=-1, dtype=torch.float32):
+        print(attn_weights.shape)
         self.profile(attn_weights,
                      dim=dim,
                      profile_path='pre_softmax',
                      left_value_edge=-20.25,
                      right_value_edge=20,
                      value_index=-0.05)
-        attn_weights = self.nonlinear(attn_weights, dim=dim, dtype=dtype).to(attn_weights.dtype)
+        original_dtype = attn_weights.dtype
+        attn_weights = self.nonlinear(attn_weights, dim=dim, dtype=dtype)
+        if attn_weights.dtype != original_dtype:
+            attn_weights = attn_weights.to(original_dtype)
         self.profile(attn_weights,
                      dim=dim,
                      profile_path='post_softmax',
