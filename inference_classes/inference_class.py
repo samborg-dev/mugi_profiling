@@ -134,8 +134,6 @@ class InferenceModel:
     def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
         torch.cuda.empty_cache()
         gc.collect()
-        print(function_name)
-        print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
 
         attention_default_classes = [CustomSoftmax]
         ffn_default_classes = [CustomSilu, CustomGelu, CustomFastGelu]

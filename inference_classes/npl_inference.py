@@ -15,7 +15,7 @@ class NLPModel(InferenceModel):
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, use_fast=True)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager').to(self.device)
+        self.model = AutoModelForCausalLM.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager', device_map='auto').to(self.device)
         self.max_length = self.model.config.max_position_embeddings
 
     def process_dataset(self):

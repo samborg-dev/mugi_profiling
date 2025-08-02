@@ -15,7 +15,7 @@ class VideoModel(InferenceModel):
 
     def load_model(self):
         self.processor = AutoProcessor.from_pretrained(self.model_name, use_fast=True)
-        self.model = AutoModelForVideoClassification.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager').to(self.device)
+        self.model = AutoModelForVideoClassification.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager', device_map='auto').to(self.device)
         self.num_frames = self.model.config.num_frames
         self.max_length = self.model.config.image_size
 
