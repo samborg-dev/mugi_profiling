@@ -15,7 +15,7 @@ class AudioModel(InferenceModel):
 
     def load_model(self):
         self.processor = AutoProcessor.from_pretrained(self.model_name, use_fast=True)
-        self.model = AutoModelForSpeechSeq2Seq.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager', device_map='auto')
+        self.model = AutoModelForSpeechSeq2Seq.from_pretrained(self.model_name, torch_dtype=torch.float16, attn_implementation='eager', device_map='auto', use_cache=False)
         self.target_sample_rate = self.processor.feature_extractor.sampling_rate
         self.max_source_length = self.model.config.max_source_positions
         self.max_target_length = self.model.config.max_target_positions

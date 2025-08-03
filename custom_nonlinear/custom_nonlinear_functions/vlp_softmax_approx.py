@@ -146,7 +146,6 @@ class VLPSoftmax(CustomSoftmax):
 
         # Increment exponent where mantissa has overflow (i.e., mantissa is 16 / needs)
         # exp = torch.where(attn_weights == 0, exp, exp - 1)
-        print(exp.shape)
         exp[attn_weights != 0] -= 1
         # exp = torch.where(torch.abs(mant) == 16, exp + 1, exp)
         mant = torch.abs(mant.to(torch.int32))
