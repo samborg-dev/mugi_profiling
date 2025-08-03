@@ -1,5 +1,21 @@
 #!/bin/bash
 
+#SBATCH --cpus-per-task=128
+#SBATCH --time=24:00:00
+#SBATCH --gres=gpu:8
+#SBATCH --constraint=h100
+#SBATCH --job-name=trasformer_profiling_test
+#SBATCH --error=transformer_profiling_test.txt
+#SBATCH --output=transformer_profiling_test.txt
+
+module load python
+module load anaconda
+module load cuda
+
+conda deactivate
+conda activate mugi_profiling
+
+cd ~/mugi_profiling
 
 # Configuration files to process
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
