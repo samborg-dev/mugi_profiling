@@ -301,7 +301,7 @@ class InferenceModel:
 
             nonlinear_combinations = self.nonlinear_combinations(function_operations) if function_name != 'torch' else [function_operations]
 
-            for nonlinear_combination in nonlinear_combinations:
+            for nonlinear_combination in tqdm(nonlinear_combinations, desc=f'Processing {function_name} combinations'):
                 nonlinear_combination = self.flatten_dict(nonlinear_combination)
 
                 function_parameters = self.nonlinear_function_parameters.get(function_name)
