@@ -15,7 +15,6 @@ module load cuda
 # Initialize conda properly for bash script
 source $(conda info --base)/etc/profile.d/conda.sh
 
-conda deactivate
 conda activate mugi_profiling
 
 cd ~/mugi_profiling

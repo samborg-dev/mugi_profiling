@@ -258,11 +258,17 @@ class InferenceModel:
         
         torch.cuda.empty_cache()
         print('pre_inference')
-        print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
+        for i in range(torch.cuda.device_count()):
+            device = torch.device(f"cuda:{i}")
+            print(f"\n=== CUDA Device {i}: {torch.cuda.get_device_name(device)} ===")
+            print(torch.cuda.memory_summary(device=device, abbreviated=True))
         print()
         self.run_inference()
         print('post_inference')
-        print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
+        for i in range(torch.cuda.device_count()):
+            device = torch.device(f"cuda:{i}")
+            print(f"\n=== CUDA Device {i}: {torch.cuda.get_device_name(device)} ===")
+            print(torch.cuda.memory_summary(device=device, abbreviated=True))
         print()
         torch.cuda.empty_cache()
         gc.collect()
