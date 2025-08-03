@@ -21,25 +21,8 @@ from custom_nonlinear.custom_nonlinear_functions.vlp_softmax_approx import VLPSo
 
 class InferenceModel:
     def __init__(self, model_dict, nonlinear_dict, parameter_dict, device):
-        # Set device and multi-GPU support
+        # Set device
         self.device = device
-        self.use_multi_gpu = isinstance(device, dict) or (isinstance(device, str) and ',' in device)
-        
-        if self.use_multi_gpu:
-            if isinstance(device, str):
-                # Parse comma-separated device string: "cuda:0,cuda:1"
-                self.device_list = [d.strip() for d in device.split(',')]
-                self.primary_device = self.device_list[0]
-            elif isinstance(device, dict):
-                # Device mapping dictionary for specific layers
-                self.device_map = device
-                self.primary_device = list(device.values())[0]
-            else:
-                self.device_list = device
-                self.primary_device = device[0]
-        else:
-            self.primary_device = device
-            self.device_list = [device]
         
         # Initial dicts
         self.model_dict = model_dict
@@ -148,25 +131,6 @@ class InferenceModel:
     def set_profiling_dims(self):
         self.profile_dims = -1
 
-    def get_layer_device(self, layer_idx, total_layers=None):
-        """Distribute layers across available GPUs"""
-        if not self.use_multi_gpu:
-            return self.device
-        
-        if hasattr(self, 'device_map'):
-            # Use explicit device mapping if provided
-            return self.device_map.get(f'layer_{layer_idx}', self.primary_device)
-        
-        # Distribute layers evenly across GPUs
-        gpu_idx = layer_idx % len(self.device_list)
-        return self.device_list[gpu_idx]
-
-    def ensure_tensor_device(self, tensor, target_device):
-        """Ensure tensor is on the correct device"""
-        if tensor.device != torch.device(target_device):
-            return tensor.to(target_device)
-        return tensor
-
     def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
         torch.cuda.empty_cache()
         gc.collect()
@@ -217,62 +181,55 @@ class InferenceModel:
 
         if 'llama' in self.model_name:
             for i, layer in enumerate(self.model.model.layers):
-                layer_device = self.get_layer_device(i, len(self.model.model.layers))
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
+
+                layer_device = next(layer.parameters()).device
+
+                attention_object = attention_class(**attention_parameters, layer=i, device=self.device, profile_path=path, profile_dims=self.profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
                 eager_attn_fn = LlamaEager(nonlinear_object=attention_object)
                 forward = llama_forward(eager_attn_fn)
                 
-                # Move layer to appropriate device
-                layer.to(layer_device)
                 layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
                 layer.mlp.act_fn = ffn_object
         
         elif 'whisper' in self.model_name:
             for i, layer in enumerate(self.model.model.encoder.layers):
-                layer_device = self.get_layer_device(i)
+                layer_device = next(layer.parameters()).device
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
                 forward = whisper_forward(eager_attn_fn)
                 
-                layer.to(layer_device)
                 layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
                 layer.activation_fn = ffn_object
 
             for i, layer in enumerate(self.model.model.decoder.layers):
-                layer_device = self.get_layer_device(i + len(self.model.model.encoder.layers))
+                layer_device = next(layer.parameters()).device
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
                 forward = whisper_forward(eager_attn_fn)
                 
-                layer.to(layer_device)
                 layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
                 layer.activation_fn = ffn_object
         elif 'swinv2' in self.model_name:
-            layer_count = 0
             for i, block in enumerate(self.model.swinv2.encoder.layers):
                 for j, layer in enumerate(block.blocks):
-                    layer_device = self.get_layer_device(layer_count)
+                    layer_device = next(layer.parameters()).device
                     attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                     ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                     forward = swin_forward(attention_object)
                     
-                    layer.to(layer_device)
                     layer.attention.self.forward = types.MethodType(forward, layer.attention.self)
                     layer.intermediate.intermediate_act_fn = ffn_object
-                    layer_count += 1
         
         elif 'vivit' in self.model_name:
             for i, layer in enumerate(self.model.vivit.encoder.layer):
-                layer_device = self.get_layer_device(i)
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                 eager_attn_fn = VivitEager(nonlinear_object=attention_object)
                 forward = vivit_forward(eager_attn_fn)
 
-                layer.to(layer_device)
                 layer.attention.attention.forward = types.MethodType(forward, layer.attention.attention)
                 layer.intermediate.intermediate_act_fn = ffn_object
 

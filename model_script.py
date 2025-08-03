@@ -54,10 +54,9 @@ def evaluate_model(model_dict, nonlinear_dict, parameter_dict):
         inference_model.df.to_csv(inference_model.csv_file, index=False)
 
     finally:
-        pass
-        # if inference_model is not None:
-        #     inference_model.cleanup()
-        #     del inference_model
+        if inference_model is not None:
+            inference_model.cleanup()
+            del inference_model
 
 def main():
     parser = argparse.ArgumentParser(description="Run profiling on transformer model with custom nonlinear functions.")
