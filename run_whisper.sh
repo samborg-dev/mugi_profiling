@@ -1,12 +1,21 @@
 #!/bin/bash
 
 #SBATCH --time=24:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=64
+#SBATCH --gres=gpu:2
 #SBATCH --constraint=h100
-#SBATCH --job-name=trasformer_profiling_test
-#SBATCH --error=transformer_profiling_test.txt
-#SBATCH --output=transformer_profiling_test.txt
+#SBATCH --job-name=whisper_profiling
+#SBATCH --error=whisper_error.txt
+#SBATCH --output=whisper_profiling.txt
+
+module load python
+module load anaconda
+module load cuda
+
+conda deactivate
+conda activate mugi_profiling
+
+cd ~/mugi_profiling
 
 # Configuration files to process
 # model_configs=("config/model_config/llama/llama_2_7b.yaml")
@@ -18,7 +27,7 @@ model_configs=("config/model_config/whisper/whisper_tiny.yaml"
                "config/model_config/whisper/whisper_medium.yaml"
                "config/model_config/whisper/whisper_large.yaml")
 # model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
-nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
+nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
 
@@ -39,14 +48,17 @@ for model_config in "${model_configs[@]}"; do
     # Run the transformer script with the current config
     python model_script.py --model_config "$model_config" \
                                 --nonlinear_config "$nonlinear_config" \
-                                --parameter_config "$parameter_config" #\
-                                #--hf_token "$hf_token"
+                                --parameter_config "$parameter_config"
+    
+    # Capture the exit code
+    exit_code=$?
     
     # Check if the script ran successfully
-    if [ $? -eq 0 ]; then
+    if [ $exit_code -eq 0 ]; then
         echo "✓ Successfully completed experiment with $model_config"
     else
-        echo "✗ Error occurred while running experiment with $model_config"
+        echo "✗ Error occurred while running experiment with $model_config (exit code: $exit_code)"
+        echo "Check whisper_detailed_log.txt and whisper_error.txt for details"
         echo "Continuing with next configuration..."
     fi
     

@@ -29,7 +29,7 @@ functions:
 params:
   vlp:
     attention:
-      exp_dim: [8, 9, 10, 11, 12]
+      exp_dim: [8]
       max_exp: 1
       min_exp: [-4]
       window_size: 8

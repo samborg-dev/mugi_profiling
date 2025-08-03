@@ -9,4 +9,4 @@ nonlinear:
   attention: softmax
   ffn: gelu
 parameters:
-  batch_size: 25
+  batch_size: 100
