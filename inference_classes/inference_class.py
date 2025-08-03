@@ -5,6 +5,7 @@ import gc
 import os
 import types
 import pandas as pd
+from tqdm import tqdm
 from transformers import activations
 
 from custom_nonlinear.custom_approx import CustomSoftmax, CustomSilu, CustomGelu, CustomFastGelu
@@ -288,7 +289,7 @@ class InferenceModel:
             self.df = pd.concat([self.df, new_row], axis=0, ignore_index=True)
 
     def loop_configuration(self):
-        for function_name, function_operations in self.nonlinear_functions.items():
+        for function_name, function_operations in tqdm(self.nonlinear_functions.items(), desc='Patching configurations'):
             if 'ffn' in function_operations:
                 if self.ffn_op not in function_operations['ffn']:
                     function_operations.pop('ffn', None)
