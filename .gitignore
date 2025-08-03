@@ -10,3 +10,5 @@ null/
 *.pyc
 *.pyo
 *.pyd
+
+csv/
