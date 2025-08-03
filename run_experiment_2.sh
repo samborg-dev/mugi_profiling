@@ -5,7 +5,8 @@
 # model_configs=("config/model_config/llama/llama_2_7b.yaml")
 # model_configs=("config/model_config/llama/llama_3_8b.yaml")
 model_configs=("config/model_config/swin/swinv2_tiny.yaml"
-               "confi")
+               "config/model_config/swin/swinv2_small.yaml"
+               "config/model_config/swin/swinv2_base.yaml")
 # model_configs=("config/model_config/whisper/whisper_tiny.yaml")
 # model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
