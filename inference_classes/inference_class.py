@@ -185,7 +185,7 @@ class InferenceModel:
                 if i == 0:
                     self.device = layer_device
 
-                attention_object = attention_class(**attention_parameters, layer=i, device=self.device, profile_path=path, profile_dims=self.profiling_dims)
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
                 eager_attn_fn = LlamaEager(nonlinear_object=attention_object)
                 forward = llama_forward(eager_attn_fn)

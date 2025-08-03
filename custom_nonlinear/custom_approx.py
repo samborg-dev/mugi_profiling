@@ -69,7 +69,7 @@ class CustomNonlinear(torch.nn.Module):
             value_file = os.path.join(value_path, f'seq_len_{write_dim}.pt')
 
             if os.path.exists(exp_file):
-                prev_exp_count = torch.load(exp_file)
+                prev_exp_count = torch.load(exp_file).to(self.device)
                 if len(prev_exp_count) != len(exp_count):
                     raise ValueError(f"Previous exp count length {len(prev_exp_count)} does not match current {len(exp_count)} for save_dim {write_dim}.")
                 exp_count += prev_exp_count
@@ -78,7 +78,7 @@ class CustomNonlinear(torch.nn.Module):
             torch.save(exp_count, exp_file)
 
             if os.path.exists(value_file):
-                prev_value_count = torch.load(value_file)
+                prev_value_count = torch.load(value_file).to(self.device)
                 if len(prev_value_count) != len(value_count):
                     raise ValueError(f"Previous value count length {len(prev_value_count)} does not match current {len(value_count)} for save_dim {write_dim}.")
                 value_count += prev_value_count
