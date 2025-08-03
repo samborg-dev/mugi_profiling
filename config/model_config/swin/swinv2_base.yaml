@@ -1,0 +1,12 @@
+dataset:
+  name: imagenet-1k
+  hf_path: imagenet-1k
+  split: validation
+model: 
+  name: microsoft/swinv2-base-patch4-window8-256
+  modality: vision
+nonlinear:
+  attention: softmax
+  ffn: gelu
+parameters:
+  batch_size: 2

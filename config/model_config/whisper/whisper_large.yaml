@@ -1,0 +1,12 @@
+dataset:
+  name: librispeech
+  hf_path: openslr/librispeech_asr
+  split: test.clean
+model: 
+  name: openai/whisper-medium
+  modality: audio
+nonlinear:
+  attention: softmax
+  ffn: gelu
+parameters:
+  batch_size: 2
