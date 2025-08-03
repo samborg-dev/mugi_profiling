@@ -35,12 +35,12 @@ class CustomNonlinear(torch.nn.Module):
         tensor_dim = tensor.shape[dim]
         break_loop = False
         for i, save_dim in enumerate(self.profile_dims):
-            if tensor_dim < save_dim:
+            if tensor_dim <= save_dim:
                 save_dim = tensor_dim - 1
                 write_dim = i
                 break_loop = True
             else:
-                write_dim = save_dim - 1
+                write_dim = save_dim
             values = self.index_tensor(tensor, dim, save_dim).contiguous()
 
             mant, exp = torch.frexp(values)

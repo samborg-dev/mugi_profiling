@@ -182,7 +182,7 @@ class InferenceModel:
         attn_path = f'{function_name}_{self.attn_op}' if patch_attention else f'torch_{self.attn_op}'
         ffn_path = f'{function_name}_{self.ffn_op}' if patch_ffn else f'torch_{self.ffn_op}'
 
-        path = f'profile/{attn_path}_{ffn_path}/{self.model_name}/'
+        path = f'profile/{self.model_name}/{attn_path}_{ffn_path}/'
 
         os.makedirs(path, exist_ok=True)
 
