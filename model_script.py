@@ -2,7 +2,6 @@ import argparse
 import yaml
 import torch
 import os
-import pandas as pd
 
 from utils import huggingface_login, validate_config
 from inference_classes.audio_inference import AudioModel
@@ -55,9 +54,10 @@ def evaluate_model(model_dict, nonlinear_dict, parameter_dict):
         inference_model.df.to_csv(inference_model.csv_file, index=False)
 
     finally:
-        if inference_model is not None:
-            inference_model.cleanup()
-            del inference_model
+        #
+        # if inference_model is not None:
+        #     inference_model.cleanup()
+        #     del inference_model
 
 def main():
     parser = argparse.ArgumentParser(description="Run profiling on transformer model with custom nonlinear functions.")
