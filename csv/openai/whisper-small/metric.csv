@@ -1,0 +1,6 @@
+model,modality,value,function_name,patch_attention,patch_ffn,attn_fn,ffn_fn,attn_degree_center,attn_degrees
+openai/whisper-small,audio,4.24317792875833,torch,True,False,CustomSoftmax,CustomGelu,,
+openai/whisper-small,audio,115236834.61034139,taylor,True,False,TaylorSoftmax,CustomGelu,-10.0,2.0
+openai/whisper-small,audio,4.239036222958715,taylor,True,False,TaylorSoftmax,CustomGelu,-10.0,26.0
+openai/whisper-small,audio,49562744.97023307,taylor,True,False,TaylorSoftmax,CustomGelu,10.0,2.0
+openai/whisper-small,audio,76764281.09337346,taylor,True,False,TaylorSoftmax,CustomGelu,10.0,26.0

@@ -27,12 +27,13 @@ class TaylorSoftmax(CustomSoftmax):
         exp = 0
         while True:
             for i in range(self.degrees):
+                i = torch.tensor(i, dtype=torch.int64)
                 intermediate = x_neg - self.degree_center
                 intermediate = intermediate ** i
-                intermediate = intermediate / math.factorial(i)
+                fac = torch.tensor(math.factorial(i), dtype=torch.float64)
+                intermediate = intermediate / fac
                 exp += intermediate
             exp *= (torch.e ** (self.degree_center))
-            exp = exp.to(torch.float16)
             if exp <= 0.001 or prev_exp < exp or torch.isinf(exp):
                 break
             else:
@@ -45,7 +46,8 @@ class TaylorSoftmax(CustomSoftmax):
         for i in range(self.degrees + 1):
             intermediate = x - self.degree_center
             intermediate = intermediate ** i
-            intermediate = intermediate / math.factorial(i)
+            fac = torch.tensor(math.factorial(i), dtype=torch.float64)
+            intermediate = intermediate / fac
             exp += intermediate
         exp *= (torch.e ** (self.degree_center))
         exp = torch.where(x < self.x_neg, torch.tensor(0.0, dtype=torch.bfloat16), exp)

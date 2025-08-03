@@ -2,27 +2,27 @@ functions:
   torch:
     attention:
       - softmax
-    ffn:
-      - silu
-      - gelu
-      - fast_gelu
-  vlp:
-    attention:
-      - softmax
-    ffn:
-      - silu
-      - gelu
-      - fast_gelu
-  pwl:
-    attention:
-      - softmax
-    ffn:
-      - silu
-      - gelu
-      - fast_gelu
-  pwl_mobilenet:
-    ffn:
-      - silu
+  #   ffn:
+  #     - silu
+  #     - gelu
+  #     - fast_gelu
+  # vlp:
+  #   attention:
+  #     - softmax
+  #   ffn:
+  #     - silu
+  #     - gelu
+  #     - fast_gelu
+  # pwl:
+  #   attention:
+  #     - softmax
+  #   ffn:
+  #     - silu
+  #     - gelu
+  #     - fast_gelu
+  # pwl_mobilenet:
+  #   ffn:
+  #     - silu
   taylor:
     attention:
       - softmax
@@ -37,7 +37,7 @@ params:
     ffn:
       exp_dim: [8, 12]
       max_pos_exp: [-7, 5]
-      min_pos_exp: [-7, 5]
+      max_neg_exp: [-7, 5]
       window_size: 8
   pwl:
     attention:
