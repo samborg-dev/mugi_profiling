@@ -12,7 +12,6 @@ class NLPModel(InferenceModel):
         super().__init__(model_dict, nonlinear_dict, parameter_dict, device)
 
     def load_model(self):
-        self.device = next(self.model.parameters()).device
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name, use_fast=True)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token

@@ -181,8 +181,9 @@ class InferenceModel:
 
         if 'llama' in self.model_name:
             for i, layer in enumerate(self.model.model.layers):
-
                 layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
 
                 attention_object = attention_class(**attention_parameters, layer=i, device=self.device, profile_path=path, profile_dims=self.profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
@@ -195,6 +196,8 @@ class InferenceModel:
         elif 'whisper' in self.model_name:
             for i, layer in enumerate(self.model.model.encoder.layers):
                 layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
@@ -205,6 +208,8 @@ class InferenceModel:
 
             for i, layer in enumerate(self.model.model.decoder.layers):
                 layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
@@ -216,6 +221,8 @@ class InferenceModel:
             for i, block in enumerate(self.model.swinv2.encoder.layers):
                 for j, layer in enumerate(block.blocks):
                     layer_device = next(layer.parameters()).device
+                    if i == 0:
+                        self.device = layer_device
                     attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                     ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                     forward = swin_forward(attention_object)
@@ -225,6 +232,9 @@ class InferenceModel:
         
         elif 'vivit' in self.model_name:
             for i, layer in enumerate(self.model.vivit.encoder.layer):
+                layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
                 attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                 ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
                 eager_attn_fn = VivitEager(nonlinear_object=attention_object)
