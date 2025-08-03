@@ -18,7 +18,7 @@ conda activate mugi_profiling
 cd ~/mugi_profiling
 
 # Configuration files to process
-nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
+nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
 
