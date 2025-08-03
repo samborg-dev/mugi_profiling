@@ -1,16 +1,17 @@
 #!/bin/bash
 
+#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=128
+#SBATCH --gres=gpu:8
+#SBATCH --constraint=h100
+#SBATCH --job-name=trasformer_profiling_test
+#SBATCH --error=transformer_profiling_test.txt
+#SBATCH --output=transformer_profiling_test.txt
 
 # Configuration files to process
-# model_configs=("config/model_config/llama/llama_2_7b.yaml")
-# model_configs=("config/model_config/llama/llama_3_8b.yaml")
-# model_configs=("config/model_config/swin/swinv2_tiny.yaml")
-model_configs=("config/model_config/whisper/whisper_tiny.yaml"
-               "config/model_config/whisper/whisper_small.yaml"
-               "config/model_config/whisper/whisper_base.yaml"
-               "config/model_config/whisper/whisper_medium.yaml"
-               "config/model_config/whisper/whisper_large.yaml")
-# model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
+model_configs=("config/model_config/llama/llama_2_70b.yaml"
+               "config/model_config/llama/llama_3_70b.yaml"
+               "config/model_config/llama/llama_3_405b.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
