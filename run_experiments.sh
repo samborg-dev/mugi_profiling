@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --cpus-per-task=128
 #SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=64
 #SBATCH --gres=gpu:8
 #SBATCH --constraint=h100
 #SBATCH --job-name=trasformer_profiling_test
