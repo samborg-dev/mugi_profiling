@@ -40,7 +40,7 @@ class CustomNonlinear(torch.nn.Module):
                 write_dim = i
                 break_loop = True
             else:
-                write_dim = save_dim
+                write_dim = save_dim - 1
             values = self.index_tensor(tensor, dim, save_dim).contiguous()
 
             mant, exp = torch.frexp(values)
