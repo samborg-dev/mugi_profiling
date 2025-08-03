@@ -5,8 +5,8 @@ from custom_nonlinear.custom_approx import CustomSoftmax
 # Edit exp_dim to adjust the LUT size
 # Edit max exp to adjust the maximum exponent of the LUT
 class VLPSoftmax(CustomSoftmax):
-    def __init__(self, exp_dim, max_exp, min_exp, window_size, lut_build, layer, device, profile_path, profile_dims, blocks=None):
-        super(VLPSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks)
+    def __init__(self, exp_dim, max_exp, min_exp, window_size, lut_build, layer, device, profile_path, profile_dims, blocks=None, keys=None):
+        super(VLPSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks, keys)
         # Exponent dimension of virtual LUT and maximum exponent for setting LUT range
         self.exp_dim = exp_dim
         self.max_exp = max_exp

@@ -7,8 +7,8 @@ import os
 # Edit segment_0 to set range (softmax range is set from segment_0 to 0 ex. -20 = [-20, 0])
 
 class PWLSoftmax(CustomSoftmax):
-    def __init__(self, segments, segment_0, layer, device, profile_path, profile_dims, blocks=None):
-        super(PWLSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks)
+    def __init__(self, segments, segment_0, layer, device, profile_path, profile_dims, blocks=None, keys=None):
+        super(PWLSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks, keys)
         self.segments = segments - 1
         self.segment_0 = segment_0
         self.segment_f = 0

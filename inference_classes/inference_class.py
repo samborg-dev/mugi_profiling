@@ -132,6 +132,16 @@ class InferenceModel:
         self.profile_dims = -1
 
     def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
+        attention_keys = []
+        if attention_parameters:
+            for key, item in attention_parameters.items():
+                attention_keys.append(key + '_' + str(item))
+
+        ffn_keys = []
+        if ffn_parameters:
+            for key, item in ffn_parameters.items():
+                ffn_keys.append(key + '_' + str(item))
+
         torch.cuda.empty_cache()
         gc.collect()
 
@@ -185,8 +195,8 @@ class InferenceModel:
                 if i == 0:
                     self.device = layer_device
 
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims)
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=ffn_keys)
                 eager_attn_fn = LlamaEager(nonlinear_object=attention_object)
                 forward = llama_forward(eager_attn_fn)
                 
@@ -198,8 +208,8 @@ class InferenceModel:
                 layer_device = next(layer.parameters()).device
                 if i == 0:
                     self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims)
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=ffn_keys)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
                 forward = whisper_forward(eager_attn_fn)
                 
@@ -210,8 +220,8 @@ class InferenceModel:
                 layer_device = next(layer.parameters()).device
                 if i == 0:
                     self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims)
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=ffn_keys)
                 eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
                 forward = whisper_forward(eager_attn_fn)
                 
@@ -223,8 +233,8 @@ class InferenceModel:
                     layer_device = next(layer.parameters()).device
                     if i == 0:
                         self.device = layer_device
-                    attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
-                    ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
+                    attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
+                    ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
                     forward = swin_forward(attention_object)
                     
                     layer.attention.self.forward = types.MethodType(forward, layer.attention.self)
@@ -235,8 +245,8 @@ class InferenceModel:
                 layer_device = next(layer.parameters()).device
                 if i == 0:
                     self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims)
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
                 eager_attn_fn = VivitEager(nonlinear_object=attention_object)
                 forward = vivit_forward(eager_attn_fn)
 

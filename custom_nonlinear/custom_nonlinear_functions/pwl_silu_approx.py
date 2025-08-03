@@ -7,8 +7,8 @@ import os
 # Edit segment_0 to set range (SiLU range is set on both sides ex. 4 = [-4, 4])
 
 class PWLSilu(CustomSilu):
-    def __init__(self, segments, segment_0, layer, device, profile_path, profile_dims, blocks=None):
-        super(PWLSilu, self).__init__(layer, device, profile_path, profile_dims, blocks)
+    def __init__(self, segments, segment_0, layer, device, profile_path, profile_dims, blocks=None, keys=None):
+        super(PWLSilu, self).__init__(layer, device, profile_path, profile_dims, blocks, keys)
         self.segments = segments - 2
         self.segment_0 = -segment_0
         self.segment_f = segment_0

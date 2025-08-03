@@ -8,8 +8,8 @@ import os
 # Edit degrees to adjust number of polynomial degrees
 
 class TaylorSoftmax(CustomSoftmax):
-    def __init__(self, degree_center, degrees, layer, device, profile_path, profile_dims, blocks=None):
-        super(TaylorSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks)
+    def __init__(self, degree_center, degrees, layer, device, profile_path, profile_dims, blocks=None, keys=None):
+        super(TaylorSoftmax, self).__init__(layer, device, profile_path, profile_dims, blocks, keys)
         self.degree_center = degree_center
         self.degrees = degrees
         self.device = device

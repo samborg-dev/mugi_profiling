@@ -3,13 +3,14 @@ import os
 from transformers.activations import FastGELUActivation
 
 class CustomNonlinear(torch.nn.Module):
-    def __init__(self, layer, device, profile_path, profile_dims, blocks=None):
+    def __init__(self, layer, device, profile_path, profile_dims, blocks=None, keys=None):
         super(CustomNonlinear, self).__init__()
         self.layer = layer
         self.device = device
         self.profile_path = profile_path
         self.profile_dims = profile_dims
         self.blocks = blocks
+        self.keys = keys
         if not os.path.exists(self.profile_path):
             os.makedirs(self.profile_path, exist_ok=True)
 
@@ -55,19 +56,23 @@ class CustomNonlinear(torch.nn.Module):
             value_count = torch.bincount(value_indices, minlength=len(value_edges)+1)
             value_count = value_count[1:-1]
             del values, value_edges, value_indices
-
             exp_path = f'{profile_path}/exp_dist/layer_{self.layer}/'
             if self.blocks is not None:
                 exp_path = os.path.join(exp_path, f'block_{self.blocks}/')
+            if self.keys is not None or self.keys != []:
+                for key in self.keys:
+                    exp_path = os.path.join(exp_path, f'{key}/')
             exp_path = os.path.join(self.profile_path, exp_path)
             exp_file = os.path.join(exp_path, f'seq_len_{write_dim}.pt')
 
             value_path = f'{profile_path}/value_dist/layer_{self.layer}/'
             if self.blocks is not None:
                 value_path = os.path.join(value_path, f'block_{self.blocks}/')
+            if self.keys is not None or self.keys != []:
+                for key in self.keys:
+                    value_path = os.path.join(value_path, f'{key}/')
             value_path = os.path.join(self.profile_path, value_path)
             value_file = os.path.join(value_path, f'seq_len_{write_dim}.pt')
-
             if os.path.exists(exp_file):
                 prev_exp_count = torch.load(exp_file).to(self.device)
                 if len(prev_exp_count) != len(exp_count):
@@ -90,9 +95,9 @@ class CustomNonlinear(torch.nn.Module):
                 break
 
 class CustomSoftmax(CustomNonlinear):
-    def __init__(self, layer, device, profile_path, profile_dims, blocks=None):
+    def __init__(self, layer, device, profile_path, profile_dims, blocks=None, keys=None):
         profile_path += 'softmax/'
-        super().__init__(layer, device, profile_path, profile_dims, blocks)
+        super().__init__(layer, device, profile_path, profile_dims, blocks, keys)
 
     def forward(self, attn_weights, dim=-1, dtype=torch.float32):
         self.profile(attn_weights,
@@ -117,9 +122,9 @@ class CustomSoftmax(CustomNonlinear):
         return torch.nn.functional.softmax(attn_weights, dim=dim, dtype=dtype)
 
 class CustomSilu(CustomNonlinear):
-    def __init__(self, layer, device, profile_path, profile_dims, blocks=None):
+    def __init__(self, layer, device, profile_path, profile_dims, blocks=None, keys=None):
         profile_path += 'silu/'
-        super().__init__(layer, device, profile_path, profile_dims, blocks)
+        super().__init__(layer, device, profile_path, profile_dims, blocks, keys)
 
     def forward(self, x):
         self.profile(x,
@@ -141,9 +146,9 @@ class CustomSilu(CustomNonlinear):
         return torch.nn.functional.silu(x)
 
 class CustomGelu(CustomNonlinear):
-    def __init__(self, layer, device, profile_path, profile_dims, blocks=None):
+    def __init__(self, layer, device, profile_path, profile_dims, blocks=None, keys=None):
         profile_path += 'gelu/'
-        super().__init__(layer, device, profile_path, profile_dims, blocks)
+        super().__init__(layer, device, profile_path, profile_dims, blocks, keys)
 
     def forward(self, x):
         self.profile(x,

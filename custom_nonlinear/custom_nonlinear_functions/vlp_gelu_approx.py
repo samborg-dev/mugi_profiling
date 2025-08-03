@@ -6,8 +6,8 @@ import os
 # Edit exp_dim to adjust the LUT size
 # Edit max exp to adjust the maximum exponent of the LUT
 class VLPGelu(CustomGelu):
-    def __init__(self, exp_dim, max_pos_exp, max_neg_exp, window_size, layer, device, profile_path, profile_dims, blocks=None):
-        super(VLPGelu, self).__init__(layer, device, profile_path, profile_dims, blocks)
+    def __init__(self, exp_dim, max_pos_exp, max_neg_exp, window_size, layer, device, profile_path, profile_dims, blocks=None, keys=None):
+        super(VLPGelu, self).__init__(layer, device, profile_path, profile_dims, blocks, keys)
         self.exp_dim = exp_dim
         self.max_pos_exp = max_pos_exp
         self.max_neg_exp = max_neg_exp

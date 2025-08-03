@@ -30,21 +30,21 @@ params:
   vlp:
     attention:
       exp_dim: [8, 12]
-      max_exp: [-4, 4]
-      min_exp: [-7, 1]
+      max_exp: [-7, 5]
+      min_exp: [-7, 5]
       window_size: 8
       lut_build: ['max', 'min']
     ffn:
       exp_dim: [8, 12]
-      max_pos_exp: [-4, 4]
-      min_pos_exp: [-7, 1]
+      max_pos_exp: [-7, 5]
+      min_pos_exp: [-7, 5]
       window_size: 8
   pwl:
     attention:
-      segments: [6, 26]
+      segments: [4, 26]
       segment_0: [2, 26]
     ffn:
-      segments: [6, 26]
+      segments: [4, 26]
       segment_0: [2, 26]
   taylor:
     attention:
