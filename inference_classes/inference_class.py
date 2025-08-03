@@ -133,6 +133,7 @@ class InferenceModel:
         self.profile_dims = -1
 
     def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
+
         attention_keys = []
         if attention_parameters:
             for key, item in attention_parameters.items():
@@ -256,7 +257,13 @@ class InferenceModel:
 
         
         torch.cuda.empty_cache()
+        print('pre_inference')
+        print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
+        print()
         self.run_inference()
+        print('post_inference')
+        print(torch.cuda.memory_summary(device=self.device, abbreviated=True))
+        print()
         torch.cuda.empty_cache()
         gc.collect()
 
