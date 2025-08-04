@@ -8,29 +8,24 @@
 #SBATCH --error=whisper_error.txt
 #SBATCH --output=whisper_profiling.txt
 
-# module load python
-# module load anaconda
-# module load cuda
+module load python
+module load anaconda
+module load cuda
 
-# # Initialize conda properly for bash script
-# source $(conda info --base)/etc/profile.d/conda.sh
+# Initialize conda properly for bash script
+source $(conda info --base)/etc/profile.d/conda.sh
 
-# conda deactivate
-# conda activate mugi_profiling
+conda deactivate
+conda activate mugi_profiling
 
-# cd ~/mugi_profiling
+cd ~/mugi_profiling
 
 # Configuration files to process
-# model_configs=("config/model_config/llama/llama_2_7b.yaml")
-# model_configs=("config/model_config/llama/llama_3_8b.yaml")
-# model_configs=("config/model_config/swin/swinv2_tiny.yaml")
-# model_configs=("config/model_config/whisper/whisper_tiny.yaml"
-#                "config/model_config/whisper/whisper_small.yaml"
-#                "config/model_config/whisper/whisper_base.yaml"
-#                "config/model_config/whisper/whisper_medium.yaml"
-#                "config/model_config/whisper/whisper_large.yaml")
-model_configs=("config/model_config/whisper/whisper_base.yaml")
-# model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
+model_configs=("config/model_config/whisper/whisper_tiny.yaml"
+               "config/model_config/whisper/whisper_small.yaml"
+               "config/model_config/whisper/whisper_base.yaml"
+               "config/model_config/whisper/whisper_medium.yaml"
+               "config/model_config/whisper/whisper_large.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
