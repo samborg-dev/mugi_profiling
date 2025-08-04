@@ -24,11 +24,12 @@ cd ~/mugi_profiling
 # model_configs=("config/model_config/llama/llama_2_7b.yaml")
 # model_configs=("config/model_config/llama/llama_3_8b.yaml")
 # model_configs=("config/model_config/swin/swinv2_tiny.yaml")
-model_configs=("config/model_config/whisper/whisper_tiny.yaml"
-               "config/model_config/whisper/whisper_small.yaml"
-               "config/model_config/whisper/whisper_base.yaml"
-               "config/model_config/whisper/whisper_medium.yaml"
-               "config/model_config/whisper/whisper_large.yaml")
+# model_configs=("config/model_config/whisper/whisper_tiny.yaml"
+#                "config/model_config/whisper/whisper_small.yaml"
+#                "config/model_config/whisper/whisper_base.yaml"
+#                "config/model_config/whisper/whisper_medium.yaml"
+#                "config/model_config/whisper/whisper_large.yaml")
+model_configs=("config/model_config/whisper/whisper_small.yaml")
 # model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
