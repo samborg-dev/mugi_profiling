@@ -3,10 +3,10 @@ dataset:
   hf_path: openslr/librispeech_asr
   split: test.clean
 model: 
-  name: openai/whisper-large
+  name: openai/whisper-base
   modality: audio
 nonlinear:
   attention: softmax
   ffn: gelu
 parameters:
-  batch_size: 25
+  batch_size: 40

@@ -8,17 +8,17 @@
 #SBATCH --error=whisper_error.txt
 #SBATCH --output=whisper_profiling.txt
 
-module load python
-module load anaconda
-module load cuda
+# module load python
+# module load anaconda
+# module load cuda
 
-# Initialize conda properly for bash script
-source $(conda info --base)/etc/profile.d/conda.sh
+# # Initialize conda properly for bash script
+# source $(conda info --base)/etc/profile.d/conda.sh
 
-conda deactivate
-conda activate mugi_profiling
+# conda deactivate
+# conda activate mugi_profiling
 
-cd ~/mugi_profiling
+# cd ~/mugi_profiling
 
 # Configuration files to process
 # model_configs=("config/model_config/llama/llama_2_7b.yaml")

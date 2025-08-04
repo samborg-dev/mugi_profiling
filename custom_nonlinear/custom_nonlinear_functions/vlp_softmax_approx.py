@@ -142,19 +142,19 @@ class VLPSoftmax(CustomSoftmax):
 
         # Split exponent and signed mantissa, bitshift mantissa to 4 bits (assumes leading 0).
         mant, exp = torch.frexp(attn_weights)
-        mant = torch.round(mant * 16)
+        mant.mul_(16).round_()  # In-place multiply and round
 
         # Increment exponent where mantissa has overflow (i.e., mantissa is 16 / needs)
         # exp = torch.where(attn_weights == 0, exp, exp - 1)
         exp[attn_weights != 0] -= 1
-        # exp = torch.where(torch.abs(mant) == 16, exp + 1, exp)
-        mant = torch.abs(mant.to(torch.int32))
+        mant = mant.to(torch.int32)
+        mant.abs_()  # In-place abs
         exp[mant == 16] += 1
 
         max_exp_mask = exp > self.max_exp
 
         # Convert mantissa to unsigned 3 bit integer
-        mant = mant & 0x7
+        mant &= 0x7
         
         # Remove inf values to increase window selection stability
         # exp_processed = torch.where((torch.isinf(attn_weights)) | (attn_weights <= -65500.0), 0, exp)
@@ -164,15 +164,16 @@ class VLPSoftmax(CustomSoftmax):
         exp, mant = self.window_softmax_approx(exp, mant)
 
         # Postprocess 0 case and large exponent case
-        # exponentials = torch.where(attn_weights == 0, 1, self.lut[exp_processed, mant])
         exponentials = self.lut[exp, mant]
+        del mant, exp  # Free memory immediately
 
         exponentials[attn_weights == 0] = 1
-        # exponentials = torch.where(exp > self.max_exp, 0, exponentials)
         exponentials[max_exp_mask] = 0
+        del max_exp_mask  # Free memory immediately
 
         # Calculate softmax output
         attn_weights = torch.sum(exponentials, dim = dim, keepdim = True)
         attn_weights = exponentials / attn_weights
+        del exponentials  # Free memory immediately
 
         return attn_weights

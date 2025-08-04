@@ -3,7 +3,7 @@ dataset:
   hf_path: openslr/librispeech_asr
   split: test.clean
 model: 
-  name: openai/whisper-medium
+  name: openai/whisper-large
   modality: audio
 nonlinear:
   attention: softmax
