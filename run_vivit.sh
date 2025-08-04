@@ -31,14 +31,17 @@ for model_config in "${model_configs[@]}"; do
     # Run the transformer script with the current config
     python model_script.py --model_config "$model_config" \
                                 --nonlinear_config "$nonlinear_config" \
-                                --parameter_config "$parameter_config" #\
-                                #--hf_token "$hf_token"
+                                --parameter_config "$parameter_config"
+    
+    # Capture the exit code
+    exit_code=$?
     
     # Check if the script ran successfully
-    if [ $? -eq 0 ]; then
+    if [ $exit_code -eq 0 ]; then
         echo "✓ Successfully completed experiment with $model_config"
     else
-        echo "✗ Error occurred while running experiment with $model_config"
+        echo "✗ Error occurred while running experiment with $model_config (exit code: $exit_code)"
+        echo "Check whisper_detailed_log.txt and whisper_error.txt for details"
         echo "Continuing with next configuration..."
     fi
     
