@@ -20,9 +20,11 @@ conda activate mugi_profiling
 
 cd ~/mugi_profiling
 # Configuration files to process
-model_configs=("config/model_config/swin/swinv2_tiny.yaml"
-               "config/model_config/swin/swinv2_small.yaml"
-               "config/model_config/swin/swinv2_base.yaml")
+# model_configs=("config/model_config/swin/swinv2_tiny.yaml"
+#                "config/model_config/swin/swinv2_small.yaml"
+#                "config/model_config/swin/swinv2_base.yaml")
+model_configs=("config/model_config/swin/swinv2_small.yaml"
+                   "config/model_config/swin/swinv2_base.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
