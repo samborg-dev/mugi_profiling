@@ -29,7 +29,7 @@ cd ~/mugi_profiling
 #                "config/model_config/whisper/whisper_base.yaml"
 #                "config/model_config/whisper/whisper_medium.yaml"
 #                "config/model_config/whisper/whisper_large.yaml")
-model_configs=("config/model_config/whisper/whisper_small.yaml")
+model_configs=("config/model_config/whisper/whisper_base.yaml")
 # model_configs=("config/model_config/vivit/vivit-b-16x2.yaml")
 nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
