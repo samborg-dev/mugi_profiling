@@ -57,9 +57,7 @@ class VLPSoftmax(CustomSoftmax):
 
         exp = exp.view(-1, attn_shape[-1])
         mant = mant.view(-1, attn_shape[-1])
-
         attn_inter_shape = exp.shape
-
         # Pad tensors
         if exp.shape[0] % self.window_size != 0:
             padding = self.window_size - (exp.shape[0] % self.window_size)
@@ -73,9 +71,6 @@ class VLPSoftmax(CustomSoftmax):
             else:
                 exp = torch.nn.functional.pad(exp, pad=tuple(padding_shape), value=1000)
                 mant = torch.nn.functional.pad(mant, pad=tuple(padding_shape), value=1000)
-        else:
-            exp = exp
-            mant = mant
 
         exp = exp.view(self.window_size, exp.shape[0] // self.window_size, exp.shape[1])
         mant = mant.view(self.window_size, mant.shape[0] // self.window_size, mant.shape[1])
@@ -142,13 +137,13 @@ class VLPSoftmax(CustomSoftmax):
 
         # Split exponent and signed mantissa, bitshift mantissa to 4 bits (assumes leading 0).
         mant, exp = torch.frexp(attn_weights)
-        mant.mul_(16).round_()  # In-place multiply and round
+        mant.mul_(16).round_() 
 
         # Increment exponent where mantissa has overflow (i.e., mantissa is 16 / needs)
         # exp = torch.where(attn_weights == 0, exp, exp - 1)
         exp[attn_weights != 0] -= 1
         mant = mant.to(torch.int32)
-        mant.abs_()  # In-place abs
+        mant.abs_()
         exp[mant == 16] += 1
 
         max_exp_mask = exp > self.max_exp
@@ -165,15 +160,15 @@ class VLPSoftmax(CustomSoftmax):
 
         # Postprocess 0 case and large exponent case
         exponentials = self.lut[exp, mant]
-        del mant, exp  # Free memory immediately
+        del mant, exp
 
         exponentials[attn_weights == 0] = 1
         exponentials[max_exp_mask] = 0
-        del max_exp_mask  # Free memory immediately
+        del max_exp_mask
 
         # Calculate softmax output
         attn_weights = torch.sum(exponentials, dim = dim, keepdim = True)
         attn_weights = exponentials / attn_weights
-        del exponentials  # Free memory immediately
+        del exponentials 
 
         return attn_weights
