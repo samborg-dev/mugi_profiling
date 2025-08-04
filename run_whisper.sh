@@ -26,7 +26,7 @@ model_configs=("config/model_config/whisper/whisper_tiny.yaml"
                "config/model_config/whisper/whisper_base.yaml"
                "config/model_config/whisper/whisper_medium.yaml"
                "config/model_config/whisper/whisper_large.yaml")
-nonlinear_config="config/nonlinear_config/nonlinear_test.yaml"
+nonlinear_config="config/nonlinear_config/nonlinear_config.yaml"
 parameter_config="config/parameter_config/parameter_config.yaml"
 hf_token="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"
 
