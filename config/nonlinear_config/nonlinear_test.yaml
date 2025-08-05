@@ -32,13 +32,13 @@ params:
       exp_dim: [8]
       max_exp: 1
       min_exp: [-4]
-      window_size: 8
+      window_size: 256
       lut_build: ['max']
     ffn:
       exp_dim: 8
       max_pos_exp: [1]
       max_neg_exp: 1
-      window_size: [8]
+      window_size: [256]
   pwl:
     attention:
       segments: 22
