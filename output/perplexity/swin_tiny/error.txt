@@ -1,0 +1,6 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`

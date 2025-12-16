@@ -1,0 +1,25 @@
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/llama/llama_2_7b.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/meta-llama/Llama-2-7b-hf/nonlinear_config_torch/metric.csv
+✓ Successfully completed experiment with config/model_config/llama/llama_2_7b.yaml
+----------------------------------------
+
+Running experiment with configuration: config/model_config/llama/llama_2_13b.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/meta-llama/Llama-2-13b-hf/nonlinear_config_torch/metric.csv
+✓ Successfully completed experiment with config/model_config/llama/llama_2_13b.yaml
+----------------------------------------

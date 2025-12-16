@@ -1,0 +1,31 @@
+Lmod has detected the following error: The following module(s) are unknown:
+"anaconda3_gpu"
+
+Please check the spelling or version number. Also try "module spider ..."
+It is also possible your cache file is out-of-date; it may help to try:
+  $ module --ignore_cache load "anaconda3_gpu"
+
+Also make sure that all modulefiles written in TCL start with the string
+#%Module
+
+
+
+Lmod has detected the following error: Cannot load module "cuda/12.8" because
+these module(s) are loaded:
+   cudatoolkit
+
+While processing the following module(s):
+    Module fullname  Module Filename
+    ---------------  ---------------
+    cuda/12.8        /opt/cray/pe/lmod/modulefiles/core/cuda/12.8.lua
+
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`
+Running configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it][ABatched Inference: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it]
+Running configurations: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it]Running configurations: 100%|██████████| 1/1 [00:01<00:00,  1.24s/it]

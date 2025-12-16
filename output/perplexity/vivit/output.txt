@@ -1,0 +1,13 @@
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/vivit/vivit-b-16x2.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+✗ Error occurred while running experiment with config/model_config/vivit/vivit-b-16x2.yaml (exit code: 1)
+Check whisper_detailed_log.txt and whisper_error.txt for details
+Continuing with next configuration...
+----------------------------------------

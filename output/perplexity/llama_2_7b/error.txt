@@ -1,0 +1,13 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files: 100%|██████████| 2/2 [00:00<00:00, 20.50it/s]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.78s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.07s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.18s/it]
+Patching configurations:   0%|          | 0/5 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing torch combinations: 100%|██████████| 1/1 [00:57<00:00, 57.23s/it][AProcessing torch combinations: 100%|██████████| 1/1 [00:57<00:00, 57.23s/it]
+Patching configurations:  20%|██        | 1/5 [00:57<03:48, 57.23s/it]
+Processing vlp combinations:   0%|          | 0/3 [00:00<?, ?it/s][Aslurmstepd: error: *** JOB 14108040 ON gpue08 CANCELLED AT 2025-12-15T20:45:35 ***

@@ -1,0 +1,42 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`
+Patching configurations:   0%|          | 0/5 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing torch combinations: 100%|██████████| 1/1 [00:01<00:00,  1.67s/it][AProcessing torch combinations: 100%|██████████| 1/1 [00:01<00:00,  1.67s/it]
+Patching configurations:  20%|██        | 1/5 [00:01<00:06,  1.67s/it]
+Processing vlp combinations:   0%|          | 0/3 [00:00<?, ?it/s][A
+Processing vlp combinations:  33%|███▎      | 1/3 [00:00<00:00,  7.54it/s][A
+Processing vlp combinations:  67%|██████▋   | 2/3 [07:46<04:34, 274.31s/it][A
+Processing vlp combinations: 100%|██████████| 3/3 [22:29<00:00, 552.33s/it][AProcessing vlp combinations: 100%|██████████| 3/3 [22:29<00:00, 449.85s/it]
+Patching configurations:  40%|████      | 2/5 [22:31<39:43, 794.54s/it]
+Processing pwl combinations:   0%|          | 0/3 [00:00<?, ?it/s][A
+Processing pwl combinations:  33%|███▎      | 1/3 [00:00<00:00,  7.71it/s][A
+Processing pwl combinations:  67%|██████▋   | 2/3 [00:59<00:35, 35.20s/it][A
+Processing pwl combinations: 100%|██████████| 3/3 [01:31<00:00, 33.34s/it][AProcessing pwl combinations: 100%|██████████| 3/3 [01:31<00:00, 30.33s/it]
+Patching configurations:  60%|██████    | 3/5 [24:02<15:46, 473.29s/it]
+Processing taylor combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing taylor combinations: 100%|██████████| 1/1 [01:09<00:00, 69.66s/it][AProcessing taylor combinations: 100%|██████████| 1/1 [01:09<00:00, 69.66s/it]
+Patching configurations: 100%|██████████| 5/5 [25:11<00:00, 225.08s/it]Patching configurations: 100%|██████████| 5/5 [25:11<00:00, 302.38s/it]
+Traceback (most recent call last):
+  File "/u/dprice1/mugi_profiling/model_script.py", line 87, in <module>
+    main()
+    ~~~~^^
+  File "/u/dprice1/mugi_profiling/model_script.py", line 83, in main
+    evaluate_model(model_config, nonlinear_config, parameter_config, args.nonlinear_config)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/mugi_profiling/model_script.py", line 61, in evaluate_model
+    inference_model.cleanup()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/u/dprice1/mugi_profiling/inference_classes/audio_inference.py", line 141, in cleanup
+    model_cache_path = snapshot_download(self.model_name, local_files_only=True)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/utils/_validators.py", line 114, in _inner_fn
+    return fn(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/_snapshot_download.py", line 230, in snapshot_download
+    raise LocalEntryNotFoundError(
+    ...<3 lines>...
+    )
+huggingface_hub.errors.LocalEntryNotFoundError: Cannot find an appropriate cached snapshot folder for the specified revision on the local disk and outgoing traffic has been disabled. To enable repo look-ups and downloads online, pass 'local_files_only=False' as input.

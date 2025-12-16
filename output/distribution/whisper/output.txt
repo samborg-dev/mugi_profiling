@@ -1,0 +1,27 @@
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/whisper/whisper_tiny.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/openai/whisper-tiny/nonlinear_config_torch/metric.csv
+/u/dprice1/.cache/huggingface/hub/models--openai--whisper-tiny/snapshots/169d4a4341b33bc18d8881c4b69c2e104e1cc0af
+✓ Successfully completed experiment with config/model_config/whisper/whisper_tiny.yaml
+----------------------------------------
+
+Running experiment with configuration: config/model_config/whisper/whisper_large.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/openai/whisper-large/nonlinear_config_torch/metric.csv
+/u/dprice1/.cache/huggingface/hub/models--openai--whisper-large/snapshots/4ef9b41f0d4fe232daafdb5f76bb1dd8b23e01d7
+✓ Successfully completed experiment with config/model_config/whisper/whisper_large.yaml
+----------------------------------------

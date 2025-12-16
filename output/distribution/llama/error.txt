@@ -1,0 +1,17 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:01<00:01,  1.82s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.12s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:02<00:00,  1.23s/it]
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing torch combinations: 100%|██████████| 1/1 [00:56<00:00, 56.84s/it][AProcessing torch combinations: 100%|██████████| 1/1 [00:56<00:00, 56.84s/it]
+Patching configurations: 100%|██████████| 1/1 [00:56<00:00, 56.84s/it]Patching configurations: 100%|██████████| 1/1 [00:56<00:00, 56.84s/it]
+Fetching 3 files:   0%|          | 0/3 [00:00<?, ?it/s]Fetching 3 files: 100%|██████████| 3/3 [00:00<00:00, 38.87it/s]
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:01<00:02,  1.33s/it]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:02<00:01,  1.32s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:03<00:00,  1.09s/it]Loading checkpoint shards: 100%|██████████| 3/3 [00:03<00:00,  1.15s/it]
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing torch combinations: 100%|██████████| 1/1 [01:35<00:00, 95.17s/it][AProcessing torch combinations: 100%|██████████| 1/1 [01:35<00:00, 95.17s/it]
+Patching configurations: 100%|██████████| 1/1 [01:35<00:00, 95.17s/it]Patching configurations: 100%|██████████| 1/1 [01:35<00:00, 95.17s/it]

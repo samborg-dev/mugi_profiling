@@ -1,0 +1,15 @@
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/whisper/whisper_tiny.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/openai/whisper-tiny/nonlinear_config/metric.csv
+✗ Error occurred while running experiment with config/model_config/whisper/whisper_tiny.yaml (exit code: 1)
+Check whisper_detailed_log.txt and whisper_error.txt for details
+Continuing with next configuration...
+----------------------------------------

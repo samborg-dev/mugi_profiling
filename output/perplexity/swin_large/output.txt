@@ -1,0 +1,5 @@
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/swin/swin2_large.yaml
+----------------------------------------
+Warning: Configuration file 'config/model_config/swin/swin2_large.yaml' not found. Skipping...

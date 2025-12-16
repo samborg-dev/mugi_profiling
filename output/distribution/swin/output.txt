@@ -1,0 +1,29 @@
+swinv2_base.yaml
+swinv2_large.yaml
+swinv2_small.yaml
+swinv2_tiny.yaml
+[33m⚠️  Warning: 'huggingface-cli login' is deprecated. Use 'hf auth login' instead.[0m
+
+Running experiment with configuration: config/model_config/swin/swinv2_tiny.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/microsoft/swinv2-tiny-patch4-window8-256/nonlinear_config_torch/metric.csv
+✓ Successfully completed experiment with config/model_config/swin/swinv2_tiny.yaml
+----------------------------------------
+
+Running experiment with configuration: config/model_config/swin/swinv2_large.yaml
+----------------------------------------
+Loading model
+Loading dataset
+Processing dataset
+Batching dataset
+Looping through configurations
+Saving results
+csv/microsoft/swinv2-large-patch4-window12to16-192to256-22kto1k-ft/nonlinear_config_torch/metric.csv
+✓ Successfully completed experiment with config/model_config/swin/swinv2_large.yaml
+----------------------------------------

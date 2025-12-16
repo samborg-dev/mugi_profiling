@@ -1,0 +1,32 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Traceback (most recent call last):
+  File "/u/dprice1/.conda/envs/mugi_profiling/bin/huggingface-cli", line 8, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/commands/huggingface_cli.py", line 61, in main
+    service.run()
+    ~~~~~~~~~~~^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/commands/user.py", line 113, in run
+    login(
+    ~~~~~^
+        token=self.args.token,
+        ^^^^^^^^^^^^^^^^^^^^^^
+        add_to_git_credential=self.args.add_to_git_credential,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/utils/_deprecation.py", line 101, in inner_f
+    return f(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/utils/_deprecation.py", line 31, in inner_f
+    return f(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/_login.py", line 126, in login
+    _login(token, add_to_git_credential=add_to_git_credential)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/_login.py", line 412, in _login
+    _set_active_token(token_name=token_name, add_to_git_credential=add_to_git_credential)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/huggingface_hub/_login.py", line 457, in _set_active_token
+    raise ValueError(f"Token {token_name} not found in {constants.HF_STORED_TOKENS_PATH}")
+ValueError: Token newton_cluster not found in /u/dprice1/.cache/huggingface/stored_tokens

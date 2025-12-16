@@ -1,0 +1,116 @@
+The token has not been saved to the git credentials helper. Pass `add_to_git_credential=True` in this function directly or `--add-to-git-credential` if using via `hf`CLI if you want to set the git credential as well.
+Token is valid (permission: read).
+The token `newton_cluster` has been saved to /u/dprice1/.cache/huggingface/stored_tokens
+Your token has been saved to /u/dprice1/.cache/huggingface/token
+Login successful.
+The current active token is: `newton_cluster`
+`use_fast` is set to `True` but the image processor class does not have a fast version.  Falling back to the slow version.
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][AProcessing torch combinations:   0%|          | 0/1 [00:01<?, ?it/s]
+Patching configurations:   0%|          | 0/1 [00:01<?, ?it/s]
+Traceback (most recent call last):
+  File "/u/dprice1/mugi_profiling/model_script.py", line 87, in <module>
+    main()
+    ~~~~^^
+  File "/u/dprice1/mugi_profiling/model_script.py", line 83, in main
+    evaluate_model(model_config, nonlinear_config, parameter_config, args.nonlinear_config)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/mugi_profiling/model_script.py", line 53, in evaluate_model
+    inference_model.loop_configuration()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/u/dprice1/mugi_profiling/inference_classes/inference_class.py", line 348, in loop_configuration
+    self.patch_model(function_name, patch_attention=patch_attention, patch_ffn=patch_ffn)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/mugi_profiling/inference_classes/inference_class.py", line 275, in patch_model
+    self.run_inference()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/u/dprice1/mugi_profiling/inference_classes/inference_class.py", line 123, in run_inference
+    batched_loss = self.compute_loss(
+        batch=batch
+    )
+  File "/u/dprice1/mugi_profiling/inference_classes/video_inference.py", line 55, in compute_loss
+    outputs = self.model(pixel_values=pixel_values, labels=labels)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/accelerate/hooks.py", line 175, in new_forward
+    output = module._old_forward(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/models/vivit/modeling_vivit.py", line 760, in forward
+    outputs = self.vivit(
+        pixel_values,
+    ...<4 lines>...
+        return_dict=return_dict,
+    )
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/models/vivit/modeling_vivit.py", line 616, in forward
+    encoder_outputs = self.encoder(
+        embedding_output,
+    ...<3 lines>...
+        return_dict=return_dict,
+    )
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/models/vivit/modeling_vivit.py", line 420, in forward
+    layer_outputs = layer_module(hidden_states, layer_head_mask, output_attentions)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/modeling_layers.py", line 94, in __call__
+    return super().__call__(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/accelerate/hooks.py", line 175, in new_forward
+    output = module._old_forward(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/models/vivit/modeling_vivit.py", line 371, in forward
+    self_attention_outputs = self.attention(
+        # in Vivit, layernorm is applied before self-attention
+    ...<2 lines>...
+        output_attentions=output_attentions,
+    )
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/accelerate/hooks.py", line 175, in new_forward
+    output = module._old_forward(*args, **kwargs)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/transformers/models/vivit/modeling_vivit.py", line 315, in forward
+    self_outputs = self.attention(hidden_states, head_mask, output_attentions)
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/mugi_profiling/custom_nonlinear/custom_forward.py", line 161, in forward
+    context_layer, attention_probs = attention_interface(
+                                     ~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<6 lines>...
+        dropout=0.0 if not self.training else self.dropout_prob,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/u/dprice1/mugi_profiling/custom_nonlinear/custom_eager.py", line 107, in eager_attention_forward
+    attn_weights = nonlinear_object(attn_weights, dim=-1, dtype=torch.float32).to(query.dtype)
+                   ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/u/dprice1/.conda/envs/mugi_profiling/lib/python3.13/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/u/dprice1/mugi_profiling/custom_nonlinear/custom_approx.py", line 28, in forward
+    outputs = self.nonlinear_forward(*args, **kwargs)
+  File "/u/dprice1/mugi_profiling/custom_nonlinear/custom_approx.py", line 125, in nonlinear_forward
+    attn_weights = attn_weights.to(original_dtype)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 11.00 GiB. GPU 0 has a total capacity of 39.38 GiB of which 3.23 GiB is free. Including non-PyTorch memory, this process has 36.14 GiB memory in use. Of the allocated memory 34.66 GiB is allocated by PyTorch, and 1014.89 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
