@@ -12,3 +12,6 @@ null/
 *.pyd
 
 csv/
+
+block.onnx
+llama_full.onnx
