@@ -1,0 +1,22 @@
+direction: down
+
+title: Profiling API — taps {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+Instrumentor: { style.stroke-dash: 4 }
+
+Tap: {
+  shape: class
+  "+attach()": void
+  "+detach()": void
+  "+collect()": ExponentDistribution
+}
+NonlinearInputTap: { shape: class; "reuses": "custom_approx VLP collectors" }
+GemmOutputTap: { shape: class; "reuses": "torch forward hook" }
+
+Instrumentor -> Tap: creates
+Tap -> NonlinearInputTap: is-a { target-arrowhead.shape: triangle }
+Tap -> GemmOutputTap: is-a { target-arrowhead.shape: triangle }

@@ -1,0 +1,120 @@
+direction: down
+
+title: Mugi Profiling API — target internals {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+knobs: {
+  ProfileConfig: {
+    shape: class
+    model_id: str
+    onnx_path: str
+    dtype: "FP32 | FP16 | FP8 | FP4"
+    quantization: "None | WOQ | KVQ"
+    profile_targets: "{nonlinear_inputs, gemm_outputs}"
+    kv_quant_dim: "token | sequence"
+    n_samples: int
+    batch_size: int
+    seq_len: int
+    window_size: int
+    exp_dim: int
+    dataset: DatasetSpec
+    output_dir: str
+  }
+}
+
+pipeline: {
+  ProfilingPipeline: {
+    shape: class
+    "+run(cfg)": WindowConfig
+    "reuses": "facade (new)"
+  }
+  OnnxOpList: {
+    shape: class
+    "+parse()": "[]ProfileTarget"
+    "reuses": list_llama_ops.buckets
+  }
+  ModelLoader: {
+    shape: class
+    "+load()": "(model, dataset)"
+    "reuses": "InferenceModel loaders"
+  }
+  Instrumentor: {
+    shape: class
+    "+attach(model, targets)": "[]Tap"
+    "+detach()": void
+    "reuses": patch_model
+  }
+  ProfilingRunner: {
+    shape: class
+    "+run(model, taps, n)": void
+    "reuses": run_inference
+  }
+  DistributionStore: {
+    shape: class
+    "+put(layer, op, hist)": void
+    "+all()": "[]ExponentDistribution"
+    "reuses": "profile/ dump"
+  }
+  WindowSizer: {
+    shape: class
+    "+size(dists)": "[]WindowSpec"
+    "reuses": profile_tensor
+  }
+  ConfigEmitter: {
+    shape: class
+    "+emit(specs)": WindowConfig
+    "reuses": create_nonlinear_config
+  }
+}
+
+taps: {
+  Tap: {
+    shape: class
+    "+attach()": void
+    "+detach()": void
+    "+collect()": ExponentDistribution
+  }
+  NonlinearInputTap: { shape: class; "reuses": "custom_approx VLP collectors" }
+  GemmOutputTap: { shape: class; "reuses": "torch forward hook" }
+  Tap -> NonlinearInputTap: is-a { target-arrowhead.shape: triangle }
+  Tap -> GemmOutputTap: is-a { target-arrowhead.shape: triangle }
+}
+
+strategies: {
+  WindowStrategy: {
+    shape: class
+    "+place(dist)": WindowSpec
+  }
+  TopKWindow: { shape: class; "reuses": topk_window_until_threshold }
+  BruteForceWindow: { shape: class; "status": "deferred research" }
+  GreedyWindow: { shape: class; "status": "deferred research" }
+  WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
+  WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
+  WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }
+}
+
+outputs: {
+  WindowConfig: { shape: class; file: nonlinear_config.yaml }
+  downstream: "Simulators" { shape: page }
+}
+
+knobs.ProfileConfig -> pipeline.ProfilingPipeline: configures
+pipeline.ProfilingPipeline -> pipeline.ModelLoader: 1 load
+pipeline.ProfilingPipeline -> pipeline.OnnxOpList: 2 parse ops
+pipeline.ProfilingPipeline -> pipeline.Instrumentor: 3 instrument
+pipeline.OnnxOpList -> pipeline.Instrumentor: targets
+pipeline.ModelLoader -> pipeline.Instrumentor: model
+pipeline.Instrumentor -> taps.Tap: creates
+pipeline.ProfilingPipeline -> pipeline.ProfilingRunner: 4 run xN
+pipeline.Instrumentor -> pipeline.ProfilingRunner: taps
+pipeline.ProfilingRunner -> pipeline.DistributionStore: exp dists
+pipeline.ProfilingPipeline -> pipeline.WindowSizer: 5 size
+pipeline.DistributionStore -> pipeline.WindowSizer: dists
+pipeline.WindowSizer -> strategies.WindowStrategy: uses
+pipeline.ProfilingPipeline -> pipeline.ConfigEmitter: 6 emit
+pipeline.WindowSizer -> pipeline.ConfigEmitter: specs
+pipeline.ConfigEmitter -> outputs.WindowConfig: writes
+outputs.WindowConfig -> outputs.downstream: consumed by

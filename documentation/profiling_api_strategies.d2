@@ -1,0 +1,22 @@
+direction: down
+
+title: Profiling API — window strategies {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+WindowSizer: { style.stroke-dash: 4 }
+
+WindowStrategy: {
+  shape: class
+  "+place(dist)": WindowSpec
+}
+TopKWindow: { shape: class; "reuses": topk_window_until_threshold }
+BruteForceWindow: { shape: class; "status": "deferred research" }
+GreedyWindow: { shape: class; "status": "deferred research" }
+
+WindowSizer -> WindowStrategy: uses
+WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
+WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
+WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }

@@ -1,0 +1,73 @@
+direction: down
+
+title: Profiling API — pipeline stages {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+# external touchpoints (defined fully in their own diagrams)
+ProfileConfig: { style.stroke-dash: 4 }
+Tap: { style.stroke-dash: 4 }
+WindowStrategy: { style.stroke-dash: 4 }
+WindowConfig: { shape: page; style.stroke-dash: 4 }
+
+ProfilingPipeline: {
+  shape: class
+  "+run(cfg)": WindowConfig
+  "reuses": "facade (new)"
+}
+OnnxOpList: {
+  shape: class
+  "+parse()": "[]ProfileTarget"
+  "reuses": list_llama_ops.buckets
+}
+ModelLoader: {
+  shape: class
+  "+load()": "(model, dataset)"
+  "reuses": "InferenceModel loaders"
+}
+Instrumentor: {
+  shape: class
+  "+attach(model, targets)": "[]Tap"
+  "+detach()": void
+  "reuses": patch_model
+}
+ProfilingRunner: {
+  shape: class
+  "+run(model, taps, n)": void
+  "reuses": run_inference
+}
+DistributionStore: {
+  shape: class
+  "+put(layer, op, hist)": void
+  "+all()": "[]ExponentDistribution"
+  "reuses": "profile/ dump"
+}
+WindowSizer: {
+  shape: class
+  "+size(dists)": "[]WindowSpec"
+  "reuses": profile_tensor
+}
+ConfigEmitter: {
+  shape: class
+  "+emit(specs)": WindowConfig
+  "reuses": create_nonlinear_config
+}
+
+ProfileConfig -> ProfilingPipeline: configures
+ProfilingPipeline -> ModelLoader: 1 load
+ProfilingPipeline -> OnnxOpList: 2 parse ops
+ProfilingPipeline -> Instrumentor: 3 instrument
+OnnxOpList -> Instrumentor: targets
+ModelLoader -> Instrumentor: model
+Instrumentor -> Tap: creates
+ProfilingPipeline -> ProfilingRunner: 4 run xN
+Instrumentor -> ProfilingRunner: taps
+ProfilingRunner -> DistributionStore: exp dists
+ProfilingPipeline -> WindowSizer: 5 size
+DistributionStore -> WindowSizer: dists
+WindowSizer -> WindowStrategy: uses
+ProfilingPipeline -> ConfigEmitter: 6 emit
+WindowSizer -> ConfigEmitter: specs
+ConfigEmitter -> WindowConfig: writes

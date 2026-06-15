@@ -1,0 +1,24 @@
+direction: down
+
+title: Profiling API — knob interface {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+ProfileConfig: {
+  shape: class
+  model_id: str
+  onnx_path: str
+  dtype: "FP32 | FP16 | FP8 | FP4"
+  quantization: "None | WOQ | KVQ"
+  profile_targets: "{nonlinear_inputs, gemm_outputs}"
+  kv_quant_dim: "token | sequence"
+  n_samples: int
+  batch_size: int
+  seq_len: int
+  window_size: int
+  exp_dim: int
+  dataset: DatasetSpec
+  output_dir: str
+}

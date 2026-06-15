@@ -1,0 +1,16 @@
+direction: down
+
+title: Profiling API — outputs {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+ConfigEmitter: { style.stroke-dash: 4 }
+
+WindowConfig: { shape: class; file: nonlinear_config.yaml }
+downstream: "Simulators" { shape: page }
+
+
+ConfigEmitter -> WindowConfig: writes
+WindowConfig -> downstream: consumed by
