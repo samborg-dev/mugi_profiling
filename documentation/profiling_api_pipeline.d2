@@ -17,21 +17,26 @@ ProfilingPipeline: {
   "+run(cfg)": WindowConfig
   "reuses": "facade (new)"
 }
-OnnxOpList: {
-  shape: class
-  "+parse()": "[]ProfileTarget"
-  "reuses": list_llama_ops.buckets
-}
 ModelLoader: {
   shape: class
   "+load()": "(model, dataset)"
-  "reuses": "InferenceModel loaders"
+  "reuses": "any HF model"
+}
+Exporter: {
+  shape: class
+  "+export(model_id)": onnx_path
+  "reuses": "export_onnx (Optimum)"
+}
+OnnxOpList: {
+  shape: class
+  "+classify()": "[]ProfileTarget"
+  "reuses": "ONNX op-type classify"
 }
 Instrumentor: {
   shape: class
   "+attach(model, targets)": "[]Tap"
   "+detach()": void
-  "reuses": patch_model
+  "reuses": "model_adapters registry"
 }
 ProfilingRunner: {
   shape: class
@@ -57,17 +62,20 @@ ConfigEmitter: {
 
 ProfileConfig -> ProfilingPipeline: configures
 ProfilingPipeline -> ModelLoader: 1 load
-ProfilingPipeline -> OnnxOpList: 2 parse ops
-ProfilingPipeline -> Instrumentor: 3 instrument
+ProfilingPipeline -> Exporter: 2 export
+ProfilingPipeline -> OnnxOpList: 3 parse ops
+ProfilingPipeline -> Instrumentor: 4 instrument
+ModelLoader -> Exporter: model
+Exporter -> OnnxOpList: onnx
 OnnxOpList -> Instrumentor: targets
 ModelLoader -> Instrumentor: model
 Instrumentor -> Tap: creates
-ProfilingPipeline -> ProfilingRunner: 4 run xN
+ProfilingPipeline -> ProfilingRunner: 5 run xN
 Instrumentor -> ProfilingRunner: taps
 ProfilingRunner -> DistributionStore: exp dists
-ProfilingPipeline -> WindowSizer: 5 size
+ProfilingPipeline -> WindowSizer: 6 size
 DistributionStore -> WindowSizer: dists
 WindowSizer -> WindowStrategy: uses
-ProfilingPipeline -> ConfigEmitter: 6 emit
+ProfilingPipeline -> ConfigEmitter: 7 emit
 WindowSizer -> ConfigEmitter: specs
 ConfigEmitter -> WindowConfig: writes

@@ -6,11 +6,25 @@ title: Mugi Profiling API — target internals {
   style: { font-size: 26; bold: true }
 }
 
+features: |md
+  ### Features / flags
+  - **model-agnostic** export - any HF model -> ONNX (Optimum)
+  - **dtype**: FP32 / FP16 / FP8 / FP4
+  - **quantization**: None / WOQ / KVQ
+  - **profile targets**: nonlinear inputs, GEMM outputs
+  - **pluggable taps** - per-arch adapter registry
+  - **pluggable window** - strategy (TopK / BruteForce / Greedy) x criterion (max / min / ...)
+  - **extensible**: new model = 1 adapter, new method = 1 strategy/criterion
+|
+features.near: top-left
+
 knobs: {
   ProfileConfig: {
     shape: class
     model_id: str
     onnx_path: str
+    export_task: "auto | text-generation | ..."
+    export_opset: int
     dtype: "FP32 | FP16 | FP8 | FP4"
     quantization: "None | WOQ | KVQ"
     profile_targets: "{nonlinear_inputs, gemm_outputs}"
@@ -31,21 +45,26 @@ pipeline: {
     "+run(cfg)": WindowConfig
     "reuses": "facade (new)"
   }
-  OnnxOpList: {
-    shape: class
-    "+parse()": "[]ProfileTarget"
-    "reuses": list_llama_ops.buckets
-  }
   ModelLoader: {
     shape: class
     "+load()": "(model, dataset)"
-    "reuses": "InferenceModel loaders"
+    "reuses": "any HF model"
+  }
+  Exporter: {
+    shape: class
+    "+export(model_id)": onnx_path
+    "reuses": "export_onnx (Optimum)"
+  }
+  OnnxOpList: {
+    shape: class
+    "+classify()": "[]ProfileTarget"
+    "reuses": "ONNX op-type classify"
   }
   Instrumentor: {
     shape: class
     "+attach(model, targets)": "[]Tap"
     "+detach()": void
-    "reuses": patch_model
+    "reuses": "model_adapters registry"
   }
   ProfilingRunner: {
     shape: class
@@ -86,14 +105,32 @@ taps: {
 strategies: {
   WindowStrategy: {
     shape: class
-    "+place(dist)": WindowSpec
+    "+place(dist, criterion)": WindowSpec
   }
   TopKWindow: { shape: class; "reuses": topk_window_until_threshold }
-  BruteForceWindow: { shape: class; "status": "deferred research" }
-  GreedyWindow: { shape: class; "status": "deferred research" }
+  BruteForceWindow: { shape: class; "status": "benchmark (Daniel)" }
+  GreedyWindow: { shape: class; "status": "benchmark (Daniel)" }
   WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
   WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
   WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }
+
+  WindowCriterion: {
+    shape: class
+    "+score(window)": float
+  }
+  MaxCluster: { shape: class }
+  MinCluster: { shape: class }
+  Centroid: { shape: class; "status": "future" }
+  WindowCriterion -> MaxCluster: is-a { target-arrowhead.shape: triangle }
+  WindowCriterion -> MinCluster: is-a { target-arrowhead.shape: triangle }
+  WindowCriterion -> Centroid: is-a { target-arrowhead.shape: triangle }
+
+  StrategyBenchmark: {
+    shape: class
+    "+evaluate()": "{runtime, perplexity}"
+  }
+  StrategyBenchmark -> WindowStrategy: ranks
+  StrategyBenchmark -> WindowCriterion: ranks
 }
 
 outputs: {
@@ -103,18 +140,22 @@ outputs: {
 
 knobs.ProfileConfig -> pipeline.ProfilingPipeline: configures
 pipeline.ProfilingPipeline -> pipeline.ModelLoader: 1 load
-pipeline.ProfilingPipeline -> pipeline.OnnxOpList: 2 parse ops
-pipeline.ProfilingPipeline -> pipeline.Instrumentor: 3 instrument
+pipeline.ProfilingPipeline -> pipeline.Exporter: 2 export
+pipeline.ProfilingPipeline -> pipeline.OnnxOpList: 3 parse ops
+pipeline.ProfilingPipeline -> pipeline.Instrumentor: 4 instrument
+pipeline.ModelLoader -> pipeline.Exporter: model
+pipeline.Exporter -> pipeline.OnnxOpList: onnx
 pipeline.OnnxOpList -> pipeline.Instrumentor: targets
 pipeline.ModelLoader -> pipeline.Instrumentor: model
 pipeline.Instrumentor -> taps.Tap: creates
-pipeline.ProfilingPipeline -> pipeline.ProfilingRunner: 4 run xN
+pipeline.ProfilingPipeline -> pipeline.ProfilingRunner: 5 run xN
 pipeline.Instrumentor -> pipeline.ProfilingRunner: taps
 pipeline.ProfilingRunner -> pipeline.DistributionStore: exp dists
-pipeline.ProfilingPipeline -> pipeline.WindowSizer: 5 size
+pipeline.ProfilingPipeline -> pipeline.WindowSizer: 6 size
 pipeline.DistributionStore -> pipeline.WindowSizer: dists
-pipeline.WindowSizer -> strategies.WindowStrategy: uses
-pipeline.ProfilingPipeline -> pipeline.ConfigEmitter: 6 emit
+pipeline.WindowSizer -> strategies.WindowStrategy: search
+pipeline.WindowSizer -> strategies.WindowCriterion: criterion
+pipeline.ProfilingPipeline -> pipeline.ConfigEmitter: 7 emit
 pipeline.WindowSizer -> pipeline.ConfigEmitter: specs
 pipeline.ConfigEmitter -> outputs.WindowConfig: writes
 outputs.WindowConfig -> outputs.downstream: consumed by

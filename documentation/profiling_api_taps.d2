@@ -8,6 +8,12 @@ title: Profiling API — taps {
 
 Instrumentor: { style.stroke-dash: 4 }
 
+ModelAdapter: {
+  shape: class
+  "+layer_sites(host)": "[]LayerSite"
+  "reuses": "Llama/Whisper/Swinv2/Vivit adapters"
+}
+
 Tap: {
   shape: class
   "+attach()": void
@@ -17,6 +23,8 @@ Tap: {
 NonlinearInputTap: { shape: class; "reuses": "custom_approx VLP collectors" }
 GemmOutputTap: { shape: class; "reuses": "torch forward hook" }
 
+Instrumentor -> ModelAdapter: get_adapter(model.config)
+ModelAdapter -> Tap: locates attn/ffn sites
 Instrumentor -> Tap: creates
 Tap -> NonlinearInputTap: is-a { target-arrowhead.shape: triangle }
 Tap -> GemmOutputTap: is-a { target-arrowhead.shape: triangle }

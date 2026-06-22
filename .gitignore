@@ -13,5 +13,8 @@ null/
 
 csv/
 
+# Ignore exported ONNX models
+output/onnx/
+
 block.onnx
 llama_full.onnx

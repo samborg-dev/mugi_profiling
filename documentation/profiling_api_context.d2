@@ -1,0 +1,38 @@
+direction: right
+
+title: Mugi toolchain — where the profiling frontend fits (6/15 vision) {
+  near: top-center
+  shape: text
+  style: { font-size: 22; bold: true }
+}
+
+model: "any HF model" { shape: oval }
+
+frontend: "Profiling frontend  (Sam)" {
+  onnx: "ONNX op list"
+  config: "nonlinear_config.yaml" { shape: page }
+}
+
+sims: "Simulators  (Daniel)" {
+  func: "functional sim -> accuracy / perplexity" { shape: page }
+  archx: "archx -> cycles / energy" { shape: page }
+}
+
+backend: "Hardware tool chain" {
+  isa: "ISA -> machine code  (Grig)"
+  array: "systolic array RTL  (Aria)"
+  proc: "RISC-V processor  (Josh)"
+  isa -> array: dispatch
+  isa -> proc: dispatch
+}
+
+fpga: "FPGA demo / OpenROAD synth" { shape: hexagon }
+
+model -> frontend.onnx: convert
+model -> frontend.config: profile over real data
+frontend.onnx -> sims.archx
+frontend.config -> sims.func
+frontend.config -> backend.isa: window config
+backend.array -> fpga
+backend.proc -> fpga
+sims.archx -> fpga: cost model { style.stroke-dash: 4 }

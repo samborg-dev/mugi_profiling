@@ -20,6 +20,8 @@ from custom_nonlinear.custom_nonlinear_functions.vlp_gelu_approx import VLPGelu
 from custom_nonlinear.custom_nonlinear_functions.vlp_silu_approx import VLPSilu
 from custom_nonlinear.custom_nonlinear_functions.vlp_softmax_approx import VLPSoftmax
 
+from inference_classes.model_adapters import get_adapter
+
 class InferenceModel:
     def __init__(self, model_dict, nonlinear_dict, parameter_dict, device):
         # Set device
@@ -132,6 +134,93 @@ class InferenceModel:
     def set_profiling_dims(self):
         self.profile_dims = -1
 
+    def _apply_adapter(self, attention_class, ffn_class, attention_parameters, ffn_parameters,
+                       attention_keys, ffn_keys, path):
+        """Model-agnostic instrumentation via the ModelAdapter registry. Returns #layers patched."""
+        adapter = get_adapter(self.model)
+        n = 0
+        for site in adapter.layer_sites(self):
+            if site.set_device:
+                self.device = site.device
+
+            attention_object = attention_class(**attention_parameters, layer=site.layer_idx, device=site.device, profile_path=path, profile_dims=site.profile_dims, keys=attention_keys, **site.keys)
+            ffn_object = ffn_class(**ffn_parameters, layer=site.layer_idx, device=site.device, profile_path=path, profile_dims=site.profile_dims, keys=ffn_keys, **site.keys)
+
+            forward = site.forward_builder(attention_object)
+            site.attn_module.forward = types.MethodType(forward, site.attn_module)
+            setattr(site.ffn_parent, site.ffn_attr, ffn_object)
+
+            # the patch must actually take on the real module (guards typo'd paths / read-only attrs)
+            assert site.attn_module.forward.__func__ is forward, f"attention patch did not take at layer {site.layer_idx}"
+            assert getattr(site.ffn_parent, site.ffn_attr) is ffn_object, f"ffn patch did not take at layer {site.layer_idx}"
+            n += 1
+        return n
+
+    def _apply_legacy(self, attention_class, ffn_class, attention_parameters, ffn_parameters,
+                      attention_keys, ffn_keys, path):
+        """Verbatim pre-refactor instrumentation, kept as oracle + revert switch. Returns #layers."""
+        n = 0
+        if 'llama' in self.model_name:
+            for i, layer in enumerate(self.model.model.layers):
+                layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=ffn_keys)
+                eager_attn_fn = LlamaEager(nonlinear_object=attention_object)
+                forward = llama_forward(eager_attn_fn)
+                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
+                layer.mlp.act_fn = ffn_object
+                n += 1
+        elif 'whisper' in self.model_name:
+            for i, layer in enumerate(self.model.model.encoder.layers):
+                layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=ffn_keys)
+                eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
+                forward = whisper_forward(eager_attn_fn)
+                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
+                layer.activation_fn = ffn_object
+                n += 1
+            for i, layer in enumerate(self.model.model.decoder.layers):
+                layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=ffn_keys)
+                eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
+                forward = whisper_forward(eager_attn_fn)
+                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
+                layer.activation_fn = ffn_object
+                n += 1
+        elif 'swinv2' in self.model_name:
+            for i, block in enumerate(self.model.swinv2.encoder.layers):
+                for j, layer in enumerate(block.blocks):
+                    layer_device = next(layer.parameters()).device
+                    if i == 0:
+                        self.device = layer_device
+                    attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
+                    ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
+                    forward = swin_forward(attention_object)
+                    layer.attention.self.forward = types.MethodType(forward, layer.attention.self)
+                    layer.intermediate.intermediate_act_fn = ffn_object
+                    n += 1
+        elif 'vivit' in self.model_name:
+            for i, layer in enumerate(self.model.vivit.encoder.layer):
+                layer_device = next(layer.parameters()).device
+                if i == 0:
+                    self.device = layer_device
+                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
+                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
+                eager_attn_fn = VivitEager(nonlinear_object=attention_object)
+                forward = vivit_forward(eager_attn_fn)
+                layer.attention.attention.forward = types.MethodType(forward, layer.attention.attention)
+                layer.intermediate.intermediate_act_fn = ffn_object
+                n += 1
+        return n
+
     def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
 
         attention_keys = []
@@ -191,69 +280,27 @@ class InferenceModel:
         attention_parameters = attention_parameters if attention_parameters else {}
         ffn_parameters = ffn_parameters if ffn_parameters else {}
 
-        if 'llama' in self.model_name:
-            for i, layer in enumerate(self.model.model.layers):
-                layer_device = next(layer.parameters()).device
-                if i == 0:
-                    self.device = layer_device
+        # Instrumentation. The adapter registry is the model-agnostic path; the verbatim legacy
+        # if/elif (MUGI_USE_LEGACY_PATCH=1) is an instant revert switch + oracle. Whichever runs,
+        # the patch is VERIFIED below: the profiler feeds the LUT window config, which sets the
+        # paper's accuracy/efficiency numbers, so a wrong/zero/partial patch must fail loudly,
+        # never silently drift.
+        if os.environ.get("MUGI_USE_LEGACY_PATCH"):
+            n_patched = self._apply_legacy(attention_class, ffn_class, attention_parameters,
+                                           ffn_parameters, attention_keys, ffn_keys, path)
+        else:
+            n_patched = self._apply_adapter(attention_class, ffn_class, attention_parameters,
+                                            ffn_parameters, attention_keys, ffn_keys, path)
 
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=attention_keys)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profiling_dims, keys=ffn_keys)
-                eager_attn_fn = LlamaEager(nonlinear_object=attention_object)
-                forward = llama_forward(eager_attn_fn)
-                
-                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
-                layer.mlp.act_fn = ffn_object
-        
-        elif 'whisper' in self.model_name:
-            for i, layer in enumerate(self.model.model.encoder.layers):
-                layer_device = next(layer.parameters()).device
-                if i == 0:
-                    self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=attention_keys)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.source_profiling_dims, keys=ffn_keys)
-                eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
-                forward = whisper_forward(eager_attn_fn)
-                
-                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
-                layer.activation_fn = ffn_object
-
-            for i, layer in enumerate(self.model.model.decoder.layers):
-                layer_device = next(layer.parameters()).device
-                if i == 0:
-                    self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=attention_keys)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.target_profiling_dims, keys=ffn_keys)
-                eager_attn_fn = WhisperEager(nonlinear_object=attention_object)
-                forward = whisper_forward(eager_attn_fn)
-                
-                layer.self_attn.forward = types.MethodType(forward, layer.self_attn)
-                layer.activation_fn = ffn_object
-        elif 'swinv2' in self.model_name:
-            for i, block in enumerate(self.model.swinv2.encoder.layers):
-                for j, layer in enumerate(block.blocks):
-                    layer_device = next(layer.parameters()).device
-                    if i == 0:
-                        self.device = layer_device
-                    attention_object = attention_class(**attention_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
-                    ffn_object = ffn_class(**ffn_parameters, layer=j, blocks=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
-                    forward = swin_forward(attention_object)
-                    
-                    layer.attention.self.forward = types.MethodType(forward, layer.attention.self)
-                    layer.intermediate.intermediate_act_fn = ffn_object
-        
-        elif 'vivit' in self.model_name:
-            for i, layer in enumerate(self.model.vivit.encoder.layer):
-                layer_device = next(layer.parameters()).device
-                if i == 0:
-                    self.device = layer_device
-                attention_object = attention_class(**attention_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=attention_keys)
-                ffn_object = ffn_class(**ffn_parameters, layer=i, device=layer_device, profile_path=path, profile_dims=self.profile_dims, keys=ffn_keys)
-                eager_attn_fn = VivitEager(nonlinear_object=attention_object)
-                forward = vivit_forward(eager_attn_fn)
-
-                layer.attention.attention.forward = types.MethodType(forward, layer.attention.attention)
-                layer.intermediate.intermediate_act_fn = ffn_object
+        expected = get_adapter(self.model).expected_count(self.model)
+        if n_patched == 0:
+            raise RuntimeError(f"patch_model instrumented 0 layers for model {self.model_name!r}.")
+        if n_patched != expected:
+            raise RuntimeError(
+                f"patch_model instrumented {n_patched} layers but the config independently "
+                f"declares {expected} for model {self.model_name!r} - instrumentation is "
+                f"incomplete/incorrect; aborting to avoid a silently-wrong window config."
+            )
 
         
         torch.cuda.empty_cache()
@@ -338,7 +385,7 @@ class InferenceModel:
                 elif (attn_op and not ffn_op) or (attn_op and ffn_op and not ffn_parameters):
                     patch_attention = True
                     if attention_parameters:
-                        for attention_combination attention_parameters:
+                        for attention_combination in attention_parameters:
                             self.patch_model(function_name, attention_parameters=attention_combination, patch_attention=patch_attention, patch_ffn=patch_ffn)
                     else:
                         self.patch_model(function_name, patch_attention=patch_attention, patch_ffn=patch_ffn)

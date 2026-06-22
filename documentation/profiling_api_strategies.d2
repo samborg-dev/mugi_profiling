@@ -1,6 +1,6 @@
 direction: down
 
-title: Profiling API — window strategies {
+title: Profiling API — window strategies & criteria {
   near: top-center
   shape: text
   style: { font-size: 26; bold: true }
@@ -8,15 +8,38 @@ title: Profiling API — window strategies {
 
 WindowSizer: { style.stroke-dash: 4 }
 
+# --- search: HOW to scan window positions ---
 WindowStrategy: {
   shape: class
-  "+place(dist)": WindowSpec
+  "+place(dist, criterion)": WindowSpec
 }
 TopKWindow: { shape: class; "reuses": topk_window_until_threshold }
-BruteForceWindow: { shape: class; "status": "deferred research" }
-GreedyWindow: { shape: class; "status": "deferred research" }
-
-WindowSizer -> WindowStrategy: uses
+BruteForceWindow: { shape: class; "status": "benchmark (Daniel)" }
+GreedyWindow: { shape: class; "status": "benchmark (Daniel)" }
 WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
 WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
 WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }
+
+# --- criterion: WHAT to optimize when placing the window (Dr. Wu: keep swappable) ---
+WindowCriterion: {
+  shape: class
+  "+score(window)": float
+}
+MaxCluster: { shape: class; "reuses": "profile_tensor cluster=max" }
+MinCluster: { shape: class; "reuses": "profile_tensor cluster=min" }
+Centroid: { shape: class; "status": "future criterion" }
+WindowCriterion -> MaxCluster: is-a { target-arrowhead.shape: triangle }
+WindowCriterion -> MinCluster: is-a { target-arrowhead.shape: triangle }
+WindowCriterion -> Centroid: is-a { target-arrowhead.shape: triangle }
+
+# --- benchmark: pick the best by runtime vs perplexity (Daniel's ask) ---
+StrategyBenchmark: {
+  shape: class
+  "+evaluate()": "{runtime, perplexity}"
+  "measures": "runtime vs perplexity"
+}
+
+WindowSizer -> WindowStrategy: search
+WindowSizer -> WindowCriterion: criterion
+StrategyBenchmark -> WindowStrategy: ranks
+StrategyBenchmark -> WindowCriterion: ranks
