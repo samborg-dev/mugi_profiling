@@ -529,5 +529,6 @@ def analyze_analysis():
                 yaml.dump(nonlinear_config, f)
                         
 
-analyze_profile()
-analyze_analysis()
+if __name__ == '__main__':
+    analyze_profile()
+    analyze_analysis()
