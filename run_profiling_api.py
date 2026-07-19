@@ -23,6 +23,10 @@ def build_config(args) -> ProfileConfig:
         overrides["prefill_seq_len"] = args.prefill_seq_len
     if args.output_dir is not None:
         overrides["output_dir"] = args.output_dir
+    if args.workload_format is not None:
+        overrides["workload_format"] = args.workload_format
+    if args.no_onnx:
+        overrides["emit_onnx"] = False
 
     return ProfileConfig.from_configs(model_config, nonlinear_config, parameter_config, **overrides)
 
@@ -38,6 +42,10 @@ def main():
     parser.add_argument("--max_seq_len", type=int, default=None)
     parser.add_argument("--prefill_seq_len", type=int, default=None)
     parser.add_argument("--output_dir", default=None)
+    parser.add_argument("--workload_format", default=None, choices=["nested", "flat"],
+                        help="archx workload layout (default: nested).")
+    parser.add_argument("--no_onnx", action="store_true",
+                        help="skip ONNX export + archx conversion (uses in-memory model config).")
     args = parser.parse_args()
 
     cfg = build_config(args)

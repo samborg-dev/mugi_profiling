@@ -45,6 +45,15 @@ class ModelLoader:
         return model
 
 
+class Exporter:
+    def export(self, cfg: ProfileConfig) -> str:
+        from export_onnx import export_to_onnx
+        out_dir = cfg.onnx_path or os.path.join(
+            cfg.output_dir, "onnx", cfg.model_id.rstrip("/").split("/")[-1])
+        export_to_onnx(cfg.model_id, out_dir, task=cfg.export_task, opset=cfg.export_opset)
+        return out_dir
+
+
 class ProfilingRunner:
     def run(self, model) -> None:
         model.loop_configuration()
@@ -78,14 +87,22 @@ class ProfilingPipeline:
 
         model = self.loader.load(cfg)
         try:
+            onnx_dir = Exporter().export(cfg) if cfg.emit_onnx else None
+
             self.runner.run(model)
             store = DistributionStore(cfg)
 
             nonlinear_config_path = ConfigEmitter(cfg).emit(store)
-            archx_workload_path = ArchxWorkloadEmitter(cfg).emit(model)
+
+            # archx workload: convert from the ONNX export package when available
+            # (reads its config.json), else fall back to the in-memory model config.
+            emitter = ArchxWorkloadEmitter(cfg)
+            archx_workload_path = (emitter.emit_from_onnx(onnx_dir) if onnx_dir
+                                   else emitter.emit(model))
 
             return {
                 "profile_dir": store.root,
+                "onnx_dir": onnx_dir,
                 "nonlinear_config": nonlinear_config_path,
                 "archx_workload": archx_workload_path,
             }

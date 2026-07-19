@@ -59,6 +59,8 @@ class ProfileConfig:
     node_topology: str = "single_node"
     variant: str = "lut"
     archx_workload_name: Optional[str] = None
+    workload_format: str = "nested"          # nested | flat (which layout archx consumes)
+    emit_onnx: bool = True                    # export ONNX and convert it to the archx workload
     early_termination_cycles: dict = field(default_factory=lambda: {
         "proj_avg_early_termination_cycles": 8,
         "ffn_avg_early_termination_cycles": 8,

@@ -1,5 +1,6 @@
 import os
 import re
+import types
 
 import yaml
 
@@ -36,9 +37,9 @@ class ArchxWorkloadEmitter:
         short = self.cfg.model_id.rstrip("/").split("/")[-1].lower()
         return re.sub(r"[^a-z0-9]+", "_", short).strip("_")
 
-    def build_configuration(self, model):
+    def build_configuration(self, config):
         cfg = self.cfg
-        fields, is_llm = model_shape_fields(model)
+        fields, is_llm = model_shape_fields(types.SimpleNamespace(config=config))
         configuration = {
             "architecture": "mugi",
             **fields,
@@ -57,12 +58,17 @@ class ArchxWorkloadEmitter:
         }
         return configuration, is_llm
 
-    def emit(self, model) -> str:
-        cfg = self.cfg
-        configuration, is_llm = self.build_configuration(model)
-        name = self.workload_name()
-        workload = {"workload": {name: {"configuration": configuration}}}
+    def _wrap(self, name, configuration):
+        if self.cfg.workload_format == "flat":
+            return {"workload": {"name": name, "configuration": configuration}}
+        return {"workload": {name: {"configuration": configuration}}}
 
+    def _write(self, config, model_type):
+        configuration, is_llm = self.build_configuration(config)
+        name = self.workload_name()
+        workload = self._wrap(name, configuration)
+
+        cfg = self.cfg
         out_dir = os.path.join(
             cfg.output_dir, "archx", "workload", name,
             f"{cfg.variant}_{cfg.array_config}",
@@ -74,12 +80,20 @@ class ArchxWorkloadEmitter:
         header = ""
         if not is_llm:
             header = (
-                f"# archx-structural-only: model_type={getattr(model.config, 'model_type', '?')!r} "
-                f"is not LLM-shaped; archx cannot cost this until a matching performance model "
-                f"exists. Schema-correct for inspection only.\n"
+                f"# archx-structural-only: model_type={model_type!r} is not LLM-shaped; "
+                f"archx cannot cost this until a matching performance model exists. "
+                f"Schema-correct for inspection only.\n"
             )
         with open(out_path, "w") as f:
             if header:
                 f.write(header)
             yaml.dump(workload, f, default_flow_style=False)
         return out_path
+
+    def emit(self, model) -> str:
+        return self._write(model.config, getattr(model.config, "model_type", "?"))
+
+    def emit_from_onnx(self, onnx_dir) -> str:
+        from transformers import AutoConfig
+        config = AutoConfig.from_pretrained(onnx_dir)
+        return self._write(config, getattr(config, "model_type", "?"))
