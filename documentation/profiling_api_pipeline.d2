@@ -8,74 +8,65 @@ title: Profiling API — pipeline stages {
 
 # external touchpoints (defined fully in their own diagrams)
 ProfileConfig: { style.stroke-dash: 4 }
-Tap: { style.stroke-dash: 4 }
 WindowStrategy: { style.stroke-dash: 4 }
 WindowConfig: { shape: page; style.stroke-dash: 4 }
+Workload: { shape: page; style.stroke-dash: 4 }
 
 ProfilingPipeline: {
   shape: class
-  "+run(cfg)": WindowConfig
+  "+run()": "{profile_dir, onnx_dir, nonlinear_config, archx_workload}"
+  "constructed": "ProfilingPipeline(cfg)"
   "reuses": "facade (new)"
 }
 ModelLoader: {
   shape: class
-  "+load()": "(model, dataset)"
-  "reuses": "any HF model"
+  "+load(cfg)": model
+  "reuses": "model_script modality dispatch"
 }
 Exporter: {
   shape: class
-  "+export(model_id)": onnx_path
+  "+export(cfg)": onnx_dir
   "reuses": "export_onnx (Optimum)"
-}
-OnnxOpList: {
-  shape: class
-  "+classify()": "[]ProfileTarget"
-  "reuses": "ONNX op-type classify"
-}
-Instrumentor: {
-  shape: class
-  "+attach(model, targets)": "[]Tap"
-  "+detach()": void
-  "reuses": "model_adapters registry"
 }
 ProfilingRunner: {
   shape: class
-  "+run(model, taps, n)": void
-  "reuses": run_inference
+  "+run(model)": void
+  "reuses": "InferenceModel.loop_configuration()"
 }
 DistributionStore: {
   shape: class
-  "+put(layer, op, hist)": void
-  "+all()": "[]ExponentDistribution"
+  "+tensor_dirs()": "[]leaf dir"
   "reuses": "profile/ dump"
 }
 WindowSizer: {
   shape: class
-  "+size(dists)": "[]WindowSpec"
-  "reuses": profile_tensor
+  "+size(store)": "[]WindowSpec"
+  "reuses": "profile_tensor core"
 }
 ConfigEmitter: {
   shape: class
-  "+emit(specs)": WindowConfig
+  "+emit(store)": WindowConfig
   "reuses": create_nonlinear_config
+}
+ArchxWorkloadEmitter: {
+  shape: class
+  "+emit_from_onnx(onnx_dir)": Workload
+  "+emit(model)": Workload
+  "reuses": "model_shape + ProfileConfig archx knobs"
 }
 
 ProfileConfig -> ProfilingPipeline: configures
 ProfilingPipeline -> ModelLoader: 1 load
 ProfilingPipeline -> Exporter: 2 export
-ProfilingPipeline -> OnnxOpList: 3 parse ops
-ProfilingPipeline -> Instrumentor: 4 instrument
+ProfilingPipeline -> ProfilingRunner: 3 profile
+ProfilingPipeline -> ConfigEmitter: 4 emit
+ProfilingPipeline -> ArchxWorkloadEmitter: 5 convert
 ModelLoader -> Exporter: model
-Exporter -> OnnxOpList: onnx
-OnnxOpList -> Instrumentor: targets
-ModelLoader -> Instrumentor: model
-Instrumentor -> Tap: creates
-ProfilingPipeline -> ProfilingRunner: 5 run xN
-Instrumentor -> ProfilingRunner: taps
+ModelLoader -> ProfilingRunner: model
 ProfilingRunner -> DistributionStore: exp dists
-ProfilingPipeline -> WindowSizer: 6 size
-DistributionStore -> WindowSizer: dists
+DistributionStore -> WindowSizer: leaf dirs
 WindowSizer -> WindowStrategy: uses
-ProfilingPipeline -> ConfigEmitter: 7 emit
 WindowSizer -> ConfigEmitter: specs
+Exporter -> ArchxWorkloadEmitter: onnx dir
 ConfigEmitter -> WindowConfig: writes
+ArchxWorkloadEmitter -> Workload: writes

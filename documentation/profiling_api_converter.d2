@@ -1,0 +1,44 @@
+direction: right
+
+title: Profiling API — ONNX to archx converter {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+onnx: "ONNX — industry standard model interchange" { shape: page }
+
+ArchxWorkloadEmitter: {
+  shape: class
+  "+emit_from_onnx(onnx_dir)": workload.yaml
+  "+emit(model)": workload.yaml
+  "reads": config.json
+}
+
+ModelShape: {
+  shape: class
+  "+model_shape_fields(config)": "dim, hidden_dim, heads, kv_heads, layers, vocab"
+  "supports": "llama (is_llm) / whisper / swinv2 / vivit"
+}
+
+knobs: {
+  shape: class
+  label: "ProfileConfig archx knobs"
+  "array_config / variant": ""
+  "lut_height / lut_width": ""
+  "bitwidths / seq lens": ""
+  "early_termination_cycles": "Daniel owns the numbers"
+}
+
+flat: "flat — workload: {name, configuration}" { shape: page }
+nested: "nested — workload: {model: {configuration}}" { shape: page }
+
+archx: "archx — built for arbitrary workloads, keeps its own YAML" { shape: page }
+
+onnx -> ArchxWorkloadEmitter: reads config.json
+ModelShape -> ArchxWorkloadEmitter: shape fields
+knobs -> ArchxWorkloadEmitter: mugi knobs
+ArchxWorkloadEmitter -> flat: workload_format = flat
+ArchxWorkloadEmitter -> nested: workload_format = nested
+flat -> archx: archx main
+nested -> archx: asplos_2026_ae { style.stroke-dash: 4 }

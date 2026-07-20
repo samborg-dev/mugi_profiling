@@ -1,0 +1,32 @@
+direction: right
+
+title: Profiling API — artifact creation order {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+load: "1  load model" { shape: oval }
+
+onnx: "2  export ONNX" { shape: page }
+converter: "5  ArchxWorkloadEmitter" { shape: hexagon }
+workload: "archx workload.yaml" { shape: page }
+archx: "archx -> cycles / energy / area" { shape: page }
+
+infer: "3  instrumented inference"
+dump: "exponent histograms" { shape: page }
+sizer: "4  WindowSizer + ConfigEmitter" { shape: hexagon }
+config: "nonlinear_config.yaml" { shape: page }
+func: "functional sim -> accuracy / perplexity" { shape: page }
+
+load -> onnx
+load -> infer
+
+onnx -> converter: held until step 5 { style.stroke-dash: 4 }
+converter -> workload
+workload -> archx: consumed by
+
+infer -> dump
+dump -> sizer
+sizer -> config
+config -> func: consumed by

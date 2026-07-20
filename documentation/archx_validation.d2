@@ -1,0 +1,30 @@
+direction: down
+
+title: archx run on NCSA Delta {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+workload: "emitted workload.yaml  (flat, llama_2_13b)" { shape: page }
+
+cleared: "cleared inside archx main" {
+  s1: "1  architecture dict"
+  s2: "2  metric dict"
+  s3: "3  workload dict — our output parsed"
+  s4: "4  event graph"
+  s5: "5  metrics for every mugi module\ngemm, attention, softmax, silu,\nlut_register, lut_decoder, comparator"
+  s1 -> s2 -> s3 -> s4 -> s5
+}
+
+blocked: "6  circuit cost-data lookup" {
+  b1: "mugi cost CSVs live in csv_old/"
+  b2: "restored CSVs have no 32nm entry"
+  b3: "decoder.csv missing from csv/ and csv_old/"
+}
+
+owner: "archx mugi cost data — half-ported from asplos  (Daniel)" { shape: page }
+
+workload -> cleared.s1
+cleared.s5 -> blocked: stops here
+blocked -> owner: owned by { style.stroke-dash: 4 }

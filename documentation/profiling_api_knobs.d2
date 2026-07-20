@@ -9,18 +9,43 @@ title: Profiling API — knob interface {
 ProfileConfig: {
   shape: class
   model_id: str
+  modality: "nlp | audio | vision | video"
+  dataset: DatasetSpec
+  n_samples: int
+  batch_size: int
+  output_dir: str
   onnx_path: str
   export_task: "auto | text-generation | ..."
   export_opset: int
-  dtype: "FP32 | FP16 | FP8 | FP4"
-  quantization: "None | WOQ | KVQ"
-  profile_targets: "{nonlinear_inputs, gemm_outputs}"
-  kv_quant_dim: "token | sequence"
-  n_samples: int
-  batch_size: int
-  seq_len: int
+  emit_onnx: bool
   window_size: int
   exp_dim: int
-  dataset: DatasetSpec
-  output_dir: str
+  lut_window_size: int
+  window_strategy: "topk | bruteforce | greedy"
+  window_criterion: "auto | max | min | centroid"
+  window_calibration: "None | Llama2_7B"
+  dtype: "FP32 | FP16 | FP8 | FP4"
+  quantization: "None | WOQ | KVQ"
+  kv_quant_dim: "token | sequence"
+  profile_targets: "{nonlinear_inputs, gemm_outputs}"
+  activation_bitwidth: int
+  weight_bitwidth: int
+  noc_stationary: str
+  node_stationary: str
+  lut_height: int
+  lut_width: int
+  window_width: int
+  cycles: int
+  prefill_seq_len: int
+  max_seq_len: int
+  array_config: "128x8"
+  node_topology: single_node
+  variant: "lut | vlp"
+  archx_workload_name: str
+  workload_format: "nested | flat"
+  early_termination_cycles: dict
+  model_dict: dict
+  nonlinear_dict: dict
+  parameter_dict: dict
+  "+from_configs(...)": ProfileConfig
 }

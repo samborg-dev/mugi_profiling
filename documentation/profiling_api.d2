@@ -1,6 +1,6 @@
 direction: down
 
-title: Mugi Profiling API — target internals {
+title: Mugi Profiling API — internals {
   near: top-center
   shape: text
   style: { font-size: 26; bold: true }
@@ -9,11 +9,11 @@ title: Mugi Profiling API — target internals {
 features: |md
   ### Features / flags
   - **model-agnostic** export - any HF model -> ONNX (Optimum)
-  - **dtype**: FP32 / FP16 / FP8 / FP4
-  - **quantization**: None / WOQ / KVQ
-  - **profile targets**: nonlinear inputs, GEMM outputs
-  - **pluggable taps** - per-arch adapter registry
-  - **pluggable window** - strategy (TopK / BruteForce / Greedy) x criterion (max / min / ...)
+  - **two sim inputs** - nonlinear_config.yaml (accuracy) + archx workload.yaml (cost)
+  - **ONNX -> archx converter** - archx keeps its own YAML for arbitrary workloads
+  - **additive** - delegates to the existing inference lifecycle; instrumentation unchanged
+  - **pluggable window** - strategy (TopK / BruteForce / Greedy) x criterion (auto / max / min / centroid)
+  - **calibration bypass** - Llama2_7B == original profile_tensor, bit-for-bit
   - **extensible**: new model = 1 adapter, new method = 1 strategy/criterion
 |
 features.near: top-left
@@ -21,85 +21,84 @@ features.near: top-left
 knobs: {
   ProfileConfig: {
     shape: class
-    model_id: str
-    onnx_path: str
-    export_task: "auto | text-generation | ..."
-    export_opset: int
-    dtype: "FP32 | FP16 | FP8 | FP4"
-    quantization: "None | WOQ | KVQ"
-    profile_targets: "{nonlinear_inputs, gemm_outputs}"
-    kv_quant_dim: "token | sequence"
-    n_samples: int
-    batch_size: int
-    seq_len: int
-    window_size: int
-    exp_dim: int
-    dataset: DatasetSpec
-    output_dir: str
+    "model / data": "model_id, modality, dataset, n_samples, batch_size"
+    export: "onnx_path, export_task, export_opset, emit_onnx"
+    window: "window_size, exp_dim, lut_window_size, strategy, criterion, calibration"
+    archx: "bitwidths, lut_*, array_config, variant, workload_format, seq lens"
+    numeric: "dtype, quantization, kv_quant_dim, profile_targets"
+    source: "model_dict, nonlinear_dict, parameter_dict (+ from_configs)"
   }
 }
 
 pipeline: {
   ProfilingPipeline: {
     shape: class
-    "+run(cfg)": WindowConfig
+    "+run()": "{profile_dir, onnx_dir, nonlinear_config, archx_workload}"
+    "constructed": "ProfilingPipeline(cfg)"
     "reuses": "facade (new)"
   }
   ModelLoader: {
     shape: class
-    "+load()": "(model, dataset)"
-    "reuses": "any HF model"
+    "+load(cfg)": model
+    "reuses": "model_script modality dispatch"
   }
   Exporter: {
     shape: class
-    "+export(model_id)": onnx_path
+    "+export(cfg)": onnx_dir
     "reuses": "export_onnx (Optimum)"
-  }
-  OnnxOpList: {
-    shape: class
-    "+classify()": "[]ProfileTarget"
-    "reuses": "ONNX op-type classify"
-  }
-  Instrumentor: {
-    shape: class
-    "+attach(model, targets)": "[]Tap"
-    "+detach()": void
-    "reuses": "model_adapters registry"
   }
   ProfilingRunner: {
     shape: class
-    "+run(model, taps, n)": void
-    "reuses": run_inference
+    "+run(model)": void
+    "reuses": "InferenceModel.loop_configuration()"
   }
   DistributionStore: {
     shape: class
-    "+put(layer, op, hist)": void
-    "+all()": "[]ExponentDistribution"
+    "+tensor_dirs()": "[]leaf dir"
     "reuses": "profile/ dump"
   }
   WindowSizer: {
     shape: class
-    "+size(dists)": "[]WindowSpec"
-    "reuses": profile_tensor
+    "+size(store)": "[]WindowSpec"
+    "reuses": "profile_tensor core"
   }
   ConfigEmitter: {
     shape: class
-    "+emit(specs)": WindowConfig
+    "+emit(store)": WindowConfig
     "reuses": create_nonlinear_config
+  }
+  ArchxWorkloadEmitter: {
+    shape: class
+    "+emit_from_onnx(onnx_dir)": Workload
+    "+emit(model)": Workload
+    "reuses": "model_shape + archx knobs"
+  }
+  ModelShape: {
+    shape: class
+    "+model_shape_fields(config)": "dim, hidden_dim, heads, kv_heads, layers, vocab"
+    "supports": "llama (is_llm) / whisper / swinv2 / vivit"
   }
 }
 
-taps: {
-  Tap: {
+instrumentation: {
+  InferenceModel: {
     shape: class
-    "+attach()": void
-    "+detach()": void
-    "+collect()": ExponentDistribution
+    "+loop_configuration()": void
+    "+patch_model(fn, ...)": void
+    "reuses": "existing inference lifecycle"
   }
-  NonlinearInputTap: { shape: class; "reuses": "custom_approx VLP collectors" }
-  GemmOutputTap: { shape: class; "reuses": "torch forward hook" }
-  Tap -> NonlinearInputTap: is-a { target-arrowhead.shape: triangle }
-  Tap -> GemmOutputTap: is-a { target-arrowhead.shape: triangle }
+  ModelAdapter: {
+    shape: class
+    "+layer_sites(host)": "[]LayerSite"
+    "reuses": "Llama/Whisper/Swinv2/Vivit adapters"
+  }
+  VLPNonlinear: {
+    shape: class
+    "reuses": "custom_approx VLP classes"
+    "writes": "exp_dist/layer_N/*.pt"
+  }
+  InferenceModel -> ModelAdapter: get_adapter(model)
+  InferenceModel -> VLPNonlinear: swaps in attention/ffn class
 }
 
 strategies: {
@@ -107,9 +106,9 @@ strategies: {
     shape: class
     "+place(dist, criterion)": WindowSpec
   }
-  TopKWindow: { shape: class; "reuses": topk_window_until_threshold }
-  BruteForceWindow: { shape: class; "status": "benchmark (Daniel)" }
-  GreedyWindow: { shape: class; "status": "benchmark (Daniel)" }
+  TopKWindow: { shape: class; "reuses": topk_window_until_threshold; "status": default }
+  BruteForceWindow: { shape: class; "status": stub }
+  GreedyWindow: { shape: class; "status": stub }
   WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
   WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
   WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }
@@ -118,44 +117,39 @@ strategies: {
     shape: class
     "+score(window)": float
   }
+  AutoCluster: { shape: class; "picks": "denser side"; "status": default }
   MaxCluster: { shape: class }
   MinCluster: { shape: class }
-  Centroid: { shape: class; "status": "future" }
+  Centroid: { shape: class; "status": stub }
+  WindowCriterion -> AutoCluster: is-a { target-arrowhead.shape: triangle }
   WindowCriterion -> MaxCluster: is-a { target-arrowhead.shape: triangle }
   WindowCriterion -> MinCluster: is-a { target-arrowhead.shape: triangle }
   WindowCriterion -> Centroid: is-a { target-arrowhead.shape: triangle }
-
-  StrategyBenchmark: {
-    shape: class
-    "+evaluate()": "{runtime, perplexity}"
-  }
-  StrategyBenchmark -> WindowStrategy: ranks
-  StrategyBenchmark -> WindowCriterion: ranks
 }
 
 outputs: {
   WindowConfig: { shape: class; file: nonlinear_config.yaml }
-  downstream: "Simulators" { shape: page }
+  Workload: { shape: class; file: workload.yaml }
+  func: "functional sim -> accuracy" { shape: page }
+  archx: "archx -> cycles / energy / area" { shape: page }
+  WindowConfig -> func: consumed by
+  Workload -> archx: consumed by
 }
 
 knobs.ProfileConfig -> pipeline.ProfilingPipeline: configures
 pipeline.ProfilingPipeline -> pipeline.ModelLoader: 1 load
 pipeline.ProfilingPipeline -> pipeline.Exporter: 2 export
-pipeline.ProfilingPipeline -> pipeline.OnnxOpList: 3 parse ops
-pipeline.ProfilingPipeline -> pipeline.Instrumentor: 4 instrument
+pipeline.ProfilingPipeline -> pipeline.ProfilingRunner: 3 profile
+pipeline.ProfilingPipeline -> pipeline.ConfigEmitter: 4 emit
+pipeline.ProfilingPipeline -> pipeline.ArchxWorkloadEmitter: 5 convert
 pipeline.ModelLoader -> pipeline.Exporter: model
-pipeline.Exporter -> pipeline.OnnxOpList: onnx
-pipeline.OnnxOpList -> pipeline.Instrumentor: targets
-pipeline.ModelLoader -> pipeline.Instrumentor: model
-pipeline.Instrumentor -> taps.Tap: creates
-pipeline.ProfilingPipeline -> pipeline.ProfilingRunner: 5 run xN
-pipeline.Instrumentor -> pipeline.ProfilingRunner: taps
-pipeline.ProfilingRunner -> pipeline.DistributionStore: exp dists
-pipeline.ProfilingPipeline -> pipeline.WindowSizer: 6 size
-pipeline.DistributionStore -> pipeline.WindowSizer: dists
+pipeline.ProfilingRunner -> instrumentation.InferenceModel: delegates { style.stroke-dash: 3 }
+instrumentation.VLPNonlinear -> pipeline.DistributionStore: exp dists
+pipeline.DistributionStore -> pipeline.WindowSizer: leaf dirs
 pipeline.WindowSizer -> strategies.WindowStrategy: search
 pipeline.WindowSizer -> strategies.WindowCriterion: criterion
-pipeline.ProfilingPipeline -> pipeline.ConfigEmitter: 7 emit
 pipeline.WindowSizer -> pipeline.ConfigEmitter: specs
+pipeline.Exporter -> pipeline.ArchxWorkloadEmitter: onnx dir
+pipeline.ModelShape -> pipeline.ArchxWorkloadEmitter: shape fields
 pipeline.ConfigEmitter -> outputs.WindowConfig: writes
-outputs.WindowConfig -> outputs.downstream: consumed by
+pipeline.ArchxWorkloadEmitter -> outputs.Workload: writes

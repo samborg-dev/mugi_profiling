@@ -6,11 +6,40 @@ title: Profiling API — outputs {
   style: { font-size: 26; bold: true }
 }
 
+# emitters (defined fully in their own diagrams)
+Exporter: { style.stroke-dash: 4 }
+ProfilingRunner: { style.stroke-dash: 4 }
 ConfigEmitter: { style.stroke-dash: 4 }
+ArchxWorkloadEmitter: { style.stroke-dash: 4 }
 
-WindowConfig: { shape: class; file: nonlinear_config.yaml }
-downstream: "Simulators" { shape: page }
+Onnx: {
+  shape: class
+  dir: "output/onnx/<model>/"
+  files: "model.onnx + config.json"
+}
+ProfileDump: {
+  shape: class
+  dir: "profile/<model>/"
+  files: "exp_dist/layer_N/*.pt"
+}
+Workload: {
+  shape: class
+  file: workload.yaml
+  format: "nested | flat"
+}
+WindowConfig: {
+  shape: class
+  file: nonlinear_config.yaml
+}
 
+archx: "archx -> cycles / energy / area" { shape: page }
+func: "functional sim -> accuracy / perplexity" { shape: page }
 
+Exporter -> Onnx: writes
+ProfilingRunner -> ProfileDump: writes
+Onnx -> ArchxWorkloadEmitter: converted by
+ProfileDump -> ConfigEmitter: sized by
+ArchxWorkloadEmitter -> Workload: writes
 ConfigEmitter -> WindowConfig: writes
-WindowConfig -> downstream: consumed by
+Workload -> archx: consumed by
+WindowConfig -> func: consumed by
