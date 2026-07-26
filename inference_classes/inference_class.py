@@ -58,6 +58,8 @@ class InferenceModel:
         # Initialize DataFrame for collecting results
         self.df = None
 
+        self.nonlinear_sites = []
+
     def load_streaming_dataset(self):
         if self.dataset_config:
             self.dataset = load_dataset(self.hf_path, self.dataset_config, split=self.dataset_split, streaming=True, trust_remote_code=True)
@@ -150,6 +152,13 @@ class InferenceModel:
             site.attn_module.forward = types.MethodType(forward, site.attn_module)
             setattr(site.ffn_parent, site.ffn_attr, ffn_object)
 
+            self.nonlinear_sites.append({
+                'layer': site.layer_idx,
+                'keys': dict(site.keys),
+                'attention': attention_object,
+                'ffn': ffn_object,
+            })
+
             # the patch must actually take on the real module (guards typo'd paths / read-only attrs)
             assert site.attn_module.forward.__func__ is forward, f"attention patch did not take at layer {site.layer_idx}"
             assert getattr(site.ffn_parent, site.ffn_attr) is ffn_object, f"ffn patch did not take at layer {site.layer_idx}"
@@ -221,7 +230,26 @@ class InferenceModel:
                 n += 1
         return n
 
-    def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True):
+    def nonlinear_sites_by_layer(self):
+        if not self.nonlinear_sites:
+            raise RuntimeError(
+                "no instrumented nonlinear sites recorded. Call patch_model first; "
+                "note that the MUGI_USE_LEGACY_PATCH=1 path does not populate the "
+                "registry, so per-layer window re-parameterisation needs the adapter path."
+            )
+        out = {}
+        for entry in self.nonlinear_sites:
+            key = entry['layer']
+            if key in out:
+                raise RuntimeError(
+                    f"layer index {key} is not unique for model {self.model_name!r} "
+                    f"(sites are also distinguished by {entry['keys']!r}); address these "
+                    f"sites through self.nonlinear_sites directly."
+                )
+            out[key] = entry
+        return out
+
+    def patch_model(self, function_name, attention_parameters={}, ffn_parameters={}, patch_attention=True, patch_ffn=True, run_eval=True):
 
         attention_keys = []
         if attention_parameters:
@@ -285,6 +313,7 @@ class InferenceModel:
         # the patch is VERIFIED below: the profiler feeds the LUT window config, which sets the
         # paper's accuracy/efficiency numbers, so a wrong/zero/partial patch must fail loudly,
         # never silently drift.
+        self.nonlinear_sites = []
         if os.environ.get("MUGI_USE_LEGACY_PATCH"):
             n_patched = self._apply_legacy(attention_class, ffn_class, attention_parameters,
                                            ffn_parameters, attention_keys, ffn_keys, path)
@@ -303,6 +332,9 @@ class InferenceModel:
             )
 
         
+        if not run_eval:
+            return
+
         torch.cuda.empty_cache()
         # print('pre_inference')
         # for i in range(torch.cuda.device_count()):

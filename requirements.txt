@@ -1,0 +1,8 @@
+torch>=2.0
+transformers>=4.50
+datasets>=2.14
+huggingface_hub>=0.20
+pyyaml>=6.0
+pandas>=2.0
+numpy>=1.24
+tqdm>=4.60

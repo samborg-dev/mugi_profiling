@@ -4,29 +4,40 @@ import os
 import torch
 
 from utils import validate_config
-from inference_classes.audio_inference import AudioModel
-from inference_classes.npl_inference import NLPModel
-from inference_classes.video_inference import VideoModel
-from inference_classes.vision_inference import VisionModel
 
 from profiling_api.config import ProfileConfig
 
 
-_MODALITY_CLASSES = {
-    "nlp": NLPModel,
-    "audio": AudioModel,
-    "vision": VisionModel,
-    "video": VideoModel,
+_MODALITY_MODULES = {
+    "nlp": ("inference_classes.npl_inference", "NLPModel"),
+    "audio": ("inference_classes.audio_inference", "AudioModel"),
+    "vision": ("inference_classes.vision_inference", "VisionModel"),
+    "video": ("inference_classes.video_inference", "VideoModel"),
 }
+
+
+def modality_class(modality):
+    import importlib
+
+    target = _MODALITY_MODULES.get(modality)
+    if target is None:
+        raise ValueError(f"Unsupported modality: {modality!r}")
+    module_name, class_name = target
+    try:
+        module = importlib.import_module(module_name)
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError(
+            f"modality {modality!r} needs {module_name}, which requires {e.name!r}. "
+            f"Install it, or run a modality whose dependencies are present."
+        ) from e
+    return getattr(module, class_name)
 
 
 class ModelLoader:
     def load(self, cfg: ProfileConfig):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         modality = validate_config(cfg.model_dict, cfg.nonlinear_dict, cfg.parameter_dict)
-        model_cls = _MODALITY_CLASSES.get(modality)
-        if model_cls is None:
-            raise ValueError(f"Unsupported modality: {modality!r}")
+        model_cls = modality_class(modality)
 
         model = model_cls(cfg.model_dict, cfg.nonlinear_dict, cfg.parameter_dict, device)
 

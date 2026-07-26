@@ -1,6 +1,9 @@
 import torch
 import os
+import re
 import yaml
+
+from exponent_bins import analysis_window, exp_to_index, index_to_exp, normalize_window
 
 
 def get_subdirs(path):
@@ -32,20 +35,22 @@ def topk_window_until_threshold(counts: torch.Tensor, threshold: float = 0.99):
     frac = cumsum / total
 
     # Find smallest window where threshold is reached
-    window_size = torch.nonzero(frac >= threshold, as_tuple=True)[0][0].item() + 1
+    reached = torch.nonzero(frac >= threshold, as_tuple=True)[0]
+    window_size = reached[0].item() + 1 if reached.numel() else len(values)
 
     selected_indices = indices[:window_size]
     return selected_indices, frac[window_size - 1].item()
 
 def profile_tensor(path, window_size=8):
 
-    layer = (path.split('/')[-2]).split('_')[-1]
-    nonlinear = (path.split('/')[-5])
+    parts = re.split(r"[\\/]", path)
+    layer = parts[-2].split('_')[-1]
+    nonlinear = parts[-5]
 
     tensor = torch.load(path, map_location='cpu')
-    tensor = tensor[1:31]
+    tensor = analysis_window(tensor)
 
-    tensor = (tensor / tensor.sum()) * 100
+    tensor = normalize_window(tensor, path)
 
     if nonlinear == 'softmax':
         threshold = 0.92
@@ -67,10 +72,10 @@ def profile_tensor(path, window_size=8):
     topk_tensor = tensor[topk_min:topk_max + 1]
 
     
-    topk_max -= 15
-    topk_min -= 15
+    topk_max = index_to_exp(topk_max)
+    topk_min = index_to_exp(topk_min)
 
-    argmax_value = tensor.argmax().item() - 15
+    argmax_value = index_to_exp(tensor.argmax().item())
 
     window_sums = torch.tensor([tensor[i:i + window_size].sum() for i in range(len(tensor) - window_size + 1)])
     max_sum = window_sums.argmax().item()
@@ -78,8 +83,8 @@ def profile_tensor(path, window_size=8):
     tensor_windowed = tensor[max_sum:max_sum + window_size]
 
     max_idx = tensor_windowed.argmax()
-    max_value_idx = (max_sum + (window_size - 1)) - 15
-    min_value_idx = (max_sum - 15)
+    max_value_idx = index_to_exp(max_sum + (window_size - 1))
+    min_value_idx = index_to_exp(max_sum)
 
     indices = torch.arange(len(tensor_windowed))
     centroid = (tensor_windowed * indices).sum() / tensor_windowed.sum()
@@ -87,8 +92,8 @@ def profile_tensor(path, window_size=8):
     max_value = max_value_idx
     min_value = min_value_idx
 
-    max_idx = max_value + 15
-    min_idx = min_value + 15
+    max_idx = exp_to_index(max_value)
+    min_idx = exp_to_index(min_value)
 
     max_sum = torch.sum(tensor[max_idx - window_size:max_idx])
     min_sum = torch.sum(tensor[min_idx:min_idx + window_size])
@@ -104,6 +109,8 @@ def profile_tensor(path, window_size=8):
     #     cluster = 'max_cluster'
     # elif min_sum < max_sum:
     #     cluster = 'min_cluster'
+
+    cluster = None
 
     layer = int(layer)
     if layer == 0:
@@ -233,6 +240,15 @@ def profile_tensor(path, window_size=8):
     #         topk_min = 2
     #         cluster = 'max_cluster'
 
+    if cluster is None:
+        raise ValueError(
+            f"the Llama-2-7B calibration has no entry for layer={layer}, "
+            f"nonlinear={nonlinear!r} (it covers layers 0-31 and "
+            f"softmax/gelu/silu/fast_gelu only). This model is outside the "
+            f"calibration's scope -- use the generic window strategy instead "
+            f"(ProfileConfig(window_calibration=None))."
+        )
+
     #topk_tensor = topk_tensor.to(torch.float32)
 
     mean = topk_tensor.mean().item()
@@ -336,6 +352,25 @@ def analyze_profile():
                 tensor_paths = loop_through_subdirs(path)
                 profile_list(tensor_paths, model, nonlinear)
                 
+def attention_params(profile_dict, exp_dim=16, window_size=32):
+    return {
+        'exp_dim': exp_dim,
+        'max_exp': profile_dict['max_exp'],
+        'min_exp': profile_dict['min_exp'],
+        'window_size': window_size,
+        'lut_build': 'max' if profile_dict['cluster'] == 'max_cluster' else 'min'
+    }
+
+
+def ffn_params(profile_dict, exp_dim=16, window_size=32):
+    return {
+        'exp_dim': exp_dim,
+        'max_pos_exp': profile_dict['max_exp'],
+        'max_neg_exp': profile_dict['max_exp'],
+        'window_size': window_size
+    }
+
+
 def create_nonlinear_config(path, model_name):
     subdirs = get_subdirs(path)
     nonlinear_dict = {
@@ -357,55 +392,27 @@ def create_nonlinear_config(path, model_name):
                     profile_dict = yaml.safe_load(open(os.path.join(path, subdir, subsubdir, 'profile.yaml')))
                     layer = subsubdir.split('_')[-1]
 
-                    lut_build = 'max' if profile_dict['cluster'] == 'max_cluster' else 'min'
-
                     if layer not in nonlinear_dict['params']:
                         nonlinear_dict['params'][layer] = {
                             'vlp': {
-                                'attention': {
-                                    'exp_dim': 16,
-                                    'max_exp': profile_dict['max_exp'],
-                                    'min_exp': profile_dict['min_exp'],
-                                    'window_size': 32,
-                                    'lut_build': lut_build
-                                }
+                                'attention': attention_params(profile_dict)
                             }
                         }
                     else:
-                        nonlinear_dict['params'][layer]['vlp']['attention'] = {
-                            'exp_dim': 16,
-                            'max_exp': profile_dict['max_exp'],
-                            'min_exp': profile_dict['min_exp'],
-                            'window_size': 32,
-                            'lut_build': lut_build
-                        }
+                        nonlinear_dict['params'][layer]['vlp']['attention'] = attention_params(profile_dict)
 
                 elif subdir in ['gelu', 'silu', 'fast_gelu']:
                     profile_dict = yaml.safe_load(open(os.path.join(path, subdir, subsubdir, 'profile.yaml')))
                     layer = subsubdir.split('_')[-1]
 
-                    lut_build = 'max' if profile_dict['cluster'] == 'max_cluster' else 'min'
-
                     if layer not in nonlinear_dict['params']:
                         nonlinear_dict['params'][layer] = {
                             'vlp': {
-                                'ffn': {
-                                    'exp_dim': 16,
-                                    'max_pos_exp': profile_dict['max_exp'],
-                                    'min_pos_exp': profile_dict['min_exp'],
-                                    'window_size': 32,
-                                    'lut_build': lut_build
-                                }
+                                'ffn': ffn_params(profile_dict)
                             }
                         }
                     else:
-                        nonlinear_dict['params'][layer]['vlp']['ffn'] = {
-                            'exp_dim': 16,
-                            'max_pos_exp': profile_dict['max_exp'],
-                            'min_pos_exp': profile_dict['min_exp'],
-                            'window_size': 32,
-                            'lut_build': lut_build
-                        }
+                        nonlinear_dict['params'][layer]['vlp']['ffn'] = ffn_params(profile_dict)
             else:
                 layer = subsubdir.split('_')[-1]
                 for subsubsubdir in get_subdirs(os.path.join(path, subdir, subsubdir)):
@@ -413,19 +420,11 @@ def create_nonlinear_config(path, model_name):
                         profile_dict = yaml.safe_load(open(os.path.join(path, subdir, subsubdir, subsubsubdir, 'profile.yaml')))
                         block = subsubsubdir.split('_')[-1]
 
-                        lut_build = 'max' if profile_dict['cluster'] == 'max_cluster' else 'min'
-
                         if layer not in nonlinear_dict['params']:
                             nonlinear_dict['params'][layer] = {
                                 block: {
                                     'vlp': {
-                                        'attention': {
-                                            'exp_dim': 16,
-                                            'max_exp': profile_dict['max_exp'],
-                                            'min_exp': profile_dict['min_exp'],
-                                            'window_size': 32,
-                                            'lut_build': lut_build
-                                        }
+                                        'attention': attention_params(profile_dict)
                                     }
                                 }
                             }
@@ -433,42 +432,22 @@ def create_nonlinear_config(path, model_name):
                             if block not in nonlinear_dict['params'][layer]:
                                 nonlinear_dict['params'][layer][block] = {
                                     'vlp': {
-                                        'attention': {
-                                            'exp_dim': 16,
-                                            'max_exp': profile_dict['max_exp'],
-                                            'min_exp': profile_dict['min_exp'],
-                                            'window_size': 32,
-                                            'lut_build': lut_build
-                                        }
+                                        'attention': attention_params(profile_dict)
                                     }
                                 }
                             else:
-                                nonlinear_dict['params'][layer][block]['vlp']['attention'] = {
-                                    'exp_dim': 16,
-                                    'max_exp': profile_dict['max_exp'],
-                                    'min_exp': profile_dict['min_exp'],
-                                    'window_size': 32,
-                                    'lut_build': lut_build
-                                }
+                                nonlinear_dict['params'][layer][block]['vlp']['attention'] = attention_params(profile_dict)
                                 
 
                     elif subdir in ['gelu', 'silu', 'fast_gelu']:
                         profile_dict = yaml.safe_load(open(os.path.join(path, subdir, subsubdir, subsubsubdir, 'profile.yaml')))
                         block = subsubsubdir.split('_')[-1]
 
-                        lut_build = 'max' if profile_dict['cluster'] == 'max_cluster' else 'min'
-
                         if layer not in nonlinear_dict['params']:
                             nonlinear_dict['params'][layer] = {
                                 block: {
                                     'vlp': {
-                                        'ffn': {
-                                            'exp_dim': 16,
-                                            'max_pos_exp': profile_dict['max_exp'],
-                                            'min_pos_exp': profile_dict['min_exp'],
-                                            'window_size': 32,
-                                            'lut_build': lut_build
-                                        }
+                                        'ffn': ffn_params(profile_dict)
                                     }
                                 }
                             }
@@ -476,24 +455,12 @@ def create_nonlinear_config(path, model_name):
                             if block not in nonlinear_dict['params'][layer]:
                                 nonlinear_dict['params'][layer][block] = {
                                     'vlp': {
-                                        'ffn': {
-                                            'exp_dim': 16,
-                                            'max_pos_exp': profile_dict['max_exp'],
-                                            'min_pos_exp': profile_dict['min_exp'],
-                                            'window_size': 32,
-                                            'lut_build': lut_build
-                                        }
+                                        'ffn': ffn_params(profile_dict)
                                     }
                                 }
                             else:
-                                nonlinear_dict['params'][layer][block]['vlp']['ffn'] = {
-                                    'exp_dim': 16,
-                                    'max_pos_exp': profile_dict['max_exp'],
-                                    'min_pos_exp': profile_dict['min_exp'],
-                                    'window_size': 32,
-                                    'lut_build': lut_build
-                                }
-    
+                                nonlinear_dict['params'][layer][block]['vlp']['ffn'] = ffn_params(profile_dict)
+
     return nonlinear_dict
 
 def analyze_analysis():

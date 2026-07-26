@@ -2,6 +2,8 @@ import torch
 import os
 from transformers.activations import FastGELUActivation
 
+from exponent_bins import EXP_BIAS, N_BINS
+
 class CustomNonlinear(torch.nn.Module):
     def __init__(self, layer, device, profile_path, profile_dims, blocks=None, keys=None):
         super(CustomNonlinear, self).__init__()
@@ -11,6 +13,7 @@ class CustomNonlinear(torch.nn.Module):
         self.profile_dims = profile_dims
         self.blocks = blocks
         self.keys = keys
+        self.profiling_enabled = True
         if not os.path.exists(self.profile_path):
             os.makedirs(self.profile_path, exist_ok=True)
 
@@ -25,6 +28,9 @@ class CustomNonlinear(torch.nn.Module):
         return tensor[tuple(indexer)]
 
     def profile(self, tensor, dim, profile_path, left_value_edge, right_value_edge, value_index):
+        if not self.profiling_enabled:
+            return
+
         dim_len = tensor.shape[dim]
         if self.profile_dims == -1:
             self.profile_dims = [(dim_len - 1) // 4,
@@ -46,8 +52,8 @@ class CustomNonlinear(torch.nn.Module):
             mant, exp = torch.frexp(values)
             del mant
 
-            exp = torch.where(exp != 0, exp + 128, exp).flatten()
-            exp_count = torch.bincount(exp, minlength=256)
+            exp = torch.where(values != 0, exp + EXP_BIAS, torch.zeros_like(exp)).flatten()
+            exp_count = torch.bincount(exp, minlength=N_BINS)
             del exp
 
             value_edges = torch.arange(right_value_edge, left_value_edge, value_index).flip(0).to(self.device)

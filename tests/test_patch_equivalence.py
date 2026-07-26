@@ -1,10 +1,11 @@
-import sys
+import pytest
+
+transformers = pytest.importorskip("transformers")
 
 DIMS = dict(profiling_dims="P", profile_dims="V", source_profiling_dims="S", target_profiling_dims="T")
 
 
 class HostStub:
-    """Stands in for InferenceModel: only the attributes the adapters read."""
     def __init__(self, model):
         self.model = model
         self.model_name = model.config.model_type
@@ -47,74 +48,58 @@ def _vivit_oracle(model):
 
 
 CASES = [
-    ("AutoModelForCausalLM",            ["hf-internal-testing/tiny-random-LlamaForCausalLM"],               _llama_oracle),
-    ("AutoModelForSpeechSeq2Seq",       ["hf-internal-testing/tiny-random-WhisperForConditionalGeneration"], _whisper_oracle),
-    ("AutoModelForImageClassification", ["hf-internal-testing/tiny-random-Swinv2ForImageClassification"],    _swinv2_oracle),
-    ("AutoModelForVideoClassification", ["hf-internal-testing/tiny-random-VivitForVideoClassification"], _vivit_oracle),
+    pytest.param("AutoModelForCausalLM",
+                 "hf-internal-testing/tiny-random-LlamaForCausalLM", _llama_oracle, id="llama"),
+    pytest.param("AutoModelForSpeechSeq2Seq",
+                 "hf-internal-testing/tiny-random-WhisperForConditionalGeneration", _whisper_oracle, id="whisper"),
+    pytest.param("AutoModelForImageClassification",
+                 "hf-internal-testing/tiny-random-Swinv2ForImageClassification", _swinv2_oracle, id="swinv2"),
+    pytest.param("AutoModelForVideoClassification",
+                 "hf-internal-testing/tiny-random-VivitForVideoClassification", _vivit_oracle, id="vivit"),
 ]
 
 
 def _actual(model, host):
     from inference_classes.model_adapters import get_adapter
+
     names = {id(m): n for n, m in model.named_modules()}
-    rows = []
-    for s in get_adapter(model).layer_sites(host):
-        rows.append(dict(attn=names[id(s.attn_module)], ffn=names[id(s.ffn_parent)],
-                         attr=s.ffn_attr, layer=s.layer_idx, keys=dict(s.keys), dims=s.profile_dims))
-    return rows
+    return [dict(attn=names[id(s.attn_module)], ffn=names[id(s.ffn_parent)],
+                 attr=s.ffn_attr, layer=s.layer_idx, keys=dict(s.keys), dims=s.profile_dims)
+            for s in get_adapter(model).layer_sites(host)]
 
 
-def main():
+def _load(loader_name, model_id):
+    loader = getattr(transformers, loader_name)
     try:
-        import torch  
-        import transformers
-    except ModuleNotFoundError as e:
-        print(f"SKIPPED: {e.name!r} not installed - run on the cluster (needs torch + transformers).")
-        print("nothing was proven here.")
-        return 0
+        return loader.from_pretrained(model_id)
+    except Exception as e:
+        pytest.skip(f"could not load {model_id}: {type(e).__name__}: {e}")
 
+
+@pytest.mark.parametrize("loader_name,model_id,oracle_fn", CASES)
+def test_adapter_manifest_matches_legacy_targeting(loader_name, model_id, oracle_fn):
+    model = _load(loader_name, model_id)
+    host = HostStub(model)
+
+    try:
+        expected = oracle_fn(model)
+        actual = _actual(model, host)
+    except Exception as e:
+        pytest.skip(f"{model_id} structure differs on transformers "
+                    f"{transformers.__version__}: {type(e).__name__}: {e}")
+
+    assert actual == expected, "adapter manifest drifted from the original instrumentation"
+
+
+@pytest.mark.parametrize("loader_name,model_id,oracle_fn", CASES)
+def test_expected_count_matches_site_count(loader_name, model_id, oracle_fn):
     from inference_classes.model_adapters import get_adapter
 
-    proven, failures = 0, []
-    for loader_name, model_ids, oracle_fn in CASES:
-        loader = getattr(transformers, loader_name)
-        model = model_id = last = None
-        for cand in model_ids:
-            try:
-                model, model_id = loader.from_pretrained(cand), cand
-                break
-            except Exception as e:  
-                last = e
-        if model is None:
-            print(f"SKIP  {model_ids} (could not load: {type(last).__name__})")
-            continue
+    model = _load(loader_name, model_id)
 
-        host = HostStub(model)
-        try:
-            expected_rows = oracle_fn(model)
-            actual_rows = _actual(model, host)
-        except Exception as e:
-            print(f"SKIP  {model_id} (structure differs on this transformers version: {type(e).__name__}: {e})")
-            continue
+    try:
+        expected = oracle_fn(model)
+    except Exception as e:
+        pytest.skip(f"{model_id} structure differs: {type(e).__name__}: {e}")
 
-        ok = (actual_rows == expected_rows
-              and get_adapter(model).expected_count(model) == len(expected_rows))
-        if ok:
-            print(f"PASS  {model_id}  ({len(actual_rows)} sites)")
-            proven += 1
-        else:
-            failures.append(model_id)
-            print(f"FAIL  {model_id}: adapter manifest differs from the original targeting")
-
-    if failures:
-        print(f"\n{len(failures)} architecture(s) DRIFTED from the original instrumentation.")
-        return 1
-    if proven == 0:
-        print("\nnothing proven (all skipped). Run where the models + stack are available.")
-        return 1
-    print(f"\nadapter path reproduces the original instrumentation exactly on {proven} architecture(s).")
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+    assert get_adapter(model).expected_count(model) == len(expected)

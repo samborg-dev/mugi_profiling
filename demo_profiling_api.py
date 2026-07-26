@@ -17,6 +17,7 @@ from profiling_api.config import ProfileConfig
 from profiling_api.window import WindowSizer
 from profiling_api.emit import ConfigEmitter, ArchxWorkloadEmitter
 from profile_distribution import profile_tensor
+from exponent_bins import EXP_BIAS, N_BINS
 
 TMP = "output/_demo"
 ARCHX_REF = (r"C:/Users/samue/Desktop/dev/Unary/archx/zoo/llm/mugi/workload/generated/"
@@ -32,8 +33,8 @@ def demo_window_sizer():
     leaf = f"{TMP}/profile/softmax/pre_softmax/exp_dist/layer_0"
     os.makedirs(leaf, exist_ok=True)
     tp = f"{leaf}/seq_len_2.pt"
-    t = torch.zeros(32)
-    t[14:22] = torch.tensor([5., 20., 50., 80., 60., 30., 10., 4.])
+    t = torch.zeros(N_BINS)
+    t[EXP_BIAS - 1:EXP_BIAS + 7] = torch.tensor([5., 20., 50., 80., 60., 30., 10., 4.])
     torch.save(t, tp)
 
     generic = WindowSizer(ProfileConfig(model_id="x"))._size_tensor(tp)

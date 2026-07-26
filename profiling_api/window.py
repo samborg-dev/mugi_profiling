@@ -6,6 +6,7 @@ import torch
 import yaml
 
 from profile_distribution import topk_window_until_threshold, profile_tensor, get_seq_len
+from exponent_bins import analysis_window, exp_to_index, index_to_exp, normalize_window
 
 
 @dataclass
@@ -104,15 +105,15 @@ class WindowSizer:
         nonlinear = _parse_nonlinear(tensor_path)
 
         tensor = torch.load(tensor_path, map_location="cpu")
-        tensor = tensor[1:31]
-        tensor = (tensor / tensor.sum()) * 100
+        tensor = analysis_window(tensor)
+        tensor = normalize_window(tensor, tensor_path)
 
         min_idx_raw, max_idx_raw = self.strategy.place(tensor, nonlinear)
         topk_tensor = tensor[min_idx_raw:max_idx_raw + 1]
-        max_exp = max_idx_raw - 15
-        min_exp = min_idx_raw - 15
+        max_exp = index_to_exp(max_idx_raw)
+        min_exp = index_to_exp(min_idx_raw)
 
-        argmax_value = tensor.argmax().item() - 15
+        argmax_value = index_to_exp(tensor.argmax().item())
 
         window_sums = torch.tensor(
             [tensor[i:i + window_size].sum() for i in range(len(tensor) - window_size + 1)]
@@ -120,14 +121,14 @@ class WindowSizer:
         max_sum_pos = window_sums.argmax().item()
         tensor_windowed = tensor[max_sum_pos:max_sum_pos + window_size]
 
-        max_value_idx = (max_sum_pos + (window_size - 1)) - 15
-        min_value_idx = max_sum_pos - 15
+        max_value_idx = index_to_exp(max_sum_pos + (window_size - 1))
+        min_value_idx = index_to_exp(max_sum_pos)
 
         indices = torch.arange(len(tensor_windowed))
         centroid = (tensor_windowed * indices).sum() / tensor_windowed.sum()
 
-        max_i = max_value_idx + 15
-        min_i = min_value_idx + 15
+        max_i = exp_to_index(max_value_idx)
+        min_i = exp_to_index(min_value_idx)
         max_sum = torch.sum(tensor[max_i - window_size:max_i]).item()
         min_sum = torch.sum(tensor[min_i:min_i + window_size]).item()
 

@@ -7,14 +7,20 @@ results/
 # Ignore null output or temp dir
 null/
 
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+.pytest_cache/
 
 csv/
 
 # Ignore exported ONNX models
 output/onnx/
+
+# Ignore generated slide figures
+output/week1_figures/
 
 block.onnx
 llama_full.onnx
