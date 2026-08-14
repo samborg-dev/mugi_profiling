@@ -12,7 +12,7 @@ features: |md
   - **two sim inputs** - nonlinear_config.yaml (accuracy) + archx workload.yaml (cost)
   - **ONNX -> archx converter** - archx keeps its own YAML for arbitrary workloads
   - **additive** - delegates to the existing inference lifecycle; instrumentation unchanged
-  - **pluggable window** - strategy (TopK / BruteForce / Greedy) x criterion (auto / max / min / centroid)
+  - **pluggable window** - histogram strategy (TopK) x criterion (auto / max / min); perplexity-guided search is profiling_api.search
   - **calibration bypass** - Llama2_7B == original profile_tensor, bit-for-bit
   - **extensible**: new model = 1 adapter, new method = 1 strategy/criterion
 |
@@ -107,11 +107,7 @@ strategies: {
     "+place(dist, criterion)": WindowSpec
   }
   TopKWindow: { shape: class; "reuses": topk_window_until_threshold; "status": default }
-  BruteForceWindow: { shape: class; "status": stub }
-  GreedyWindow: { shape: class; "status": stub }
   WindowStrategy -> TopKWindow: is-a { target-arrowhead.shape: triangle }
-  WindowStrategy -> BruteForceWindow: is-a { target-arrowhead.shape: triangle }
-  WindowStrategy -> GreedyWindow: is-a { target-arrowhead.shape: triangle }
 
   WindowCriterion: {
     shape: class
@@ -120,11 +116,9 @@ strategies: {
   AutoCluster: { shape: class; "picks": "denser side"; "status": default }
   MaxCluster: { shape: class }
   MinCluster: { shape: class }
-  Centroid: { shape: class; "status": stub }
   WindowCriterion -> AutoCluster: is-a { target-arrowhead.shape: triangle }
   WindowCriterion -> MaxCluster: is-a { target-arrowhead.shape: triangle }
   WindowCriterion -> MinCluster: is-a { target-arrowhead.shape: triangle }
-  WindowCriterion -> Centroid: is-a { target-arrowhead.shape: triangle }
 }
 
 outputs: {

@@ -5,8 +5,9 @@ import hashlib
 import math
 import platform
 import time
-from dataclasses import asdict, dataclass, field
-from typing import List, Optional
+from contextlib import contextmanager
+from dataclasses import asdict, dataclass, field, replace
+from typing import Iterator, List, Optional
 
 import torch
 
@@ -37,6 +38,53 @@ class EvalResult:
             row[f'peak_mem_{device}'] = peak
         row.update({f'prov_{k}': v for k, v in self.provenance.items()})
         return row
+
+
+@dataclass(frozen=True)
+class LoadTiming:
+    load_s: float
+    device: str
+    model_id: str = ''
+    n_params: Optional[int] = None
+    stages: dict = field(default_factory=dict)
+
+    def with_model(self, model) -> 'LoadTiming':
+        return replace(self, n_params=count_parameters(model))
+
+    def with_stages(self, stages: dict) -> 'LoadTiming':
+        return replace(self, stages=dict(stages or {}))
+
+    @property
+    def weights_s(self) -> Optional[float]:
+        return self.stages.get('load_model')
+
+    def to_row(self) -> dict:
+        row = asdict(self)
+        row.pop('stages')
+        row.update({f'load_{k}_s': v for k, v in self.stages.items()})
+        return row
+
+
+def count_parameters(model) -> Optional[int]:
+    inner = getattr(model, 'model', model)
+    parameters = getattr(inner, 'parameters', None)
+    if parameters is None:
+        return None
+    return sum(p.numel() for p in parameters())
+
+
+@contextmanager
+def timed_load(model_id: str = '') -> Iterator[List[LoadTiming]]:
+    box: List[LoadTiming] = []
+    _sync()
+    t0 = time.perf_counter()
+    try:
+        yield box
+    finally:
+        _sync()
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        box.append(LoadTiming(load_s=time.perf_counter() - t0, device=device,
+                              model_id=model_id))
 
 
 def hash_batches(batches) -> str:

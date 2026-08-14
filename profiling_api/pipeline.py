@@ -1,5 +1,6 @@
 import gc
 import os
+import time
 
 import torch
 
@@ -34,10 +35,16 @@ def modality_class(modality):
 
 
 class ModelLoader:
+    def __init__(self):
+        self.timings = {}
+
     def load(self, cfg: ProfileConfig):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         modality = validate_config(cfg.model_dict, cfg.nonlinear_dict, cfg.parameter_dict)
         model_cls = modality_class(modality)
+
+        self.timings = {}
+        total = time.perf_counter()
 
         model = model_cls(cfg.model_dict, cfg.nonlinear_dict, cfg.parameter_dict, device)
 
@@ -48,11 +55,15 @@ class ModelLoader:
             os.makedirs(os.path.dirname(model.csv_file), exist_ok=True)
         model.df = None
 
-        model.load_model()
-        model.load_streaming_dataset()
-        model.process_dataset()
-        model.batch_dataset()
-        model.set_profiling_dims()
+        for stage in ("load_model", "load_streaming_dataset", "process_dataset",
+                      "batch_dataset", "set_profiling_dims"):
+            t0 = time.perf_counter()
+            getattr(model, stage)()
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            self.timings[stage] = time.perf_counter() - t0
+
+        self.timings["total"] = time.perf_counter() - total
         return model
 
 

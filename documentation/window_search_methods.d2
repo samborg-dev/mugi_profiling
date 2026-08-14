@@ -1,0 +1,84 @@
+grid-rows: 4
+grid-gap: 60
+
+title: LUT window search — published sweep vs per-layer tuning vs this work {
+  near: top-center
+  shape: text
+  style: {font-size: 28; bold: true}
+}
+
+classes: {
+  step: {
+    shape: rectangle
+    style: {border-radius: 6; stroke: "#9aa0a6"; fill: "#f7f7f7"}
+  }
+  mine: {
+    shape: rectangle
+    style: {border-radius: 6; stroke: "#e07b39"; stroke-width: 2; fill: "#fdf3ec"}
+  }
+  row: {
+    style: {fill: "#fbfbfc"; stroke: "#c8c8c8"; font-size: 20; bold: true}
+  }
+  ours: {
+    style: {fill: "#fffaf5"; stroke: "#e07b39"; font-size: 20; bold: true}
+  }
+}
+
+published: "1 · Published sweep — asplos_2026_ae (Figure 6)" {
+  class: row
+  direction: right
+
+  sweep_grid: "Cartesian grid\nexp_dim × anchor"
+  sweep_grid.class: step
+  patch: "patch_model()\none param dict for ALL layers"
+  patch.class: step
+  all_layers: "32 identical layers\nsame window each"
+  all_layers.class: step
+  ppl: "PPL\n6.28 best"
+  ppl.class: step
+
+  sweep_grid -> patch -> all_layers -> ppl
+}
+
+daniel: "2 · Per-layer procedure — newton branch (Figure 7)" {
+  class: row
+  direction: right
+
+  seed: "Manual seed\nset outside the useful range"
+  seed.class: step
+  patched: "patched_layer: N\nlayers 1..N-1 frozen in YAML"
+  patched.class: step
+  sweep: "Sweep that one layer\nmax_value / min_value"
+  sweep.class: step
+  ppl: "PPL\n5.98 final"
+  ppl.class: step
+
+  seed -> patched -> sweep -> ppl
+  ppl -> patched: "human edits YAML + resubmits — model reloads (×32)" {
+    style: {stroke: "#e07b39"; stroke-dash: 4; font-color: "#b5651d"; font-size: 16; bold: true}
+  }
+}
+
+harness: "3 · This work — automate the outer loop" {
+  class: ours
+  direction: right
+
+  seed: "Profile → seed window\nexponent histogram, TopKWindow"
+  seed.class: mine
+  greedy: "ProgressiveLayerSearch\nlayer i, layers 0..i-1 frozen, i+1.. seeded"
+  greedy.class: mine
+  reset: "reset_lut per layer\nmodel stays resident"
+  reset.class: mine
+  ppl: "EvalResult\nppl + cost + provenance"
+  ppl.class: mine
+
+  seed -> greedy -> reset -> ppl
+  ppl -> greedy: "advance layer in-process — model loaded once" {
+    style: {stroke: "#e07b39"; stroke-dash: 4; font-color: "#b5651d"; font-size: 16; bold: true}
+  }
+}
+
+ladder: "Llama 2 7B reference ladder — 5.75 base fp16  →  6.28 VLP uniform (softmax only)  →  6.21 VLP uniform (end-to-end)  →  5.98 VLP per-layer\n\nPer-layer buys 0.23 PPL across 32 layers ≈ 0.007/layer, while adjacent Figure 6 cells differ by 0.01.\nNoise gate: run-to-run ppl_spread must sit well under 0.01, or the per-layer search is fitting noise." {
+  shape: rectangle
+  style: {fill: "#f4f4f6"; stroke: "#9aa0a6"; border-radius: 6; font-size: 16}
+}

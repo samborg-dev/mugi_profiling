@@ -12,7 +12,7 @@ ATTENTION = "attention"
 FFN = "ffn"
 SITES = (ATTENTION, FFN)
 
-DEFAULT_GROUP_SIZE = 32
+DEFAULT_GROUP_SIZE = 256
 
 
 @dataclass(frozen=True)

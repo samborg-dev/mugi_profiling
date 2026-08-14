@@ -1,0 +1,73 @@
+title: What actually differs {
+  near: top-center
+  shape: text
+  style: {font-size: 30; bold: true}
+}
+
+classes: {
+  head: {
+    height: 86
+    style: {fill: "#eceef2"; stroke: "#9aa0a6"; bold: true; font-size: 20}
+  }
+  head-ours: {
+    height: 86
+    style: {fill: "#fdece0"; stroke: "#e07b39"; bold: true; font-size: 20; font-color: "#b5651d"}
+  }
+  axis: {
+    height: 86
+    style: {fill: "#f4f4f6"; stroke: "#9aa0a6"; bold: true; font-size: 19}
+  }
+  cell: {
+    height: 86
+    style: {fill: "#ffffff"; stroke: "#c8c8c8"; font-size: 19}
+  }
+  ours: {
+    height: 86
+    style: {fill: "#fffaf5"; stroke: "#e07b39"; font-size: 19; font-color: "#b5651d"}
+  }
+}
+
+comparison: "" {
+  grid-columns: 3
+  grid-gap: 0
+  style.stroke: transparent
+
+  c1_head: ""
+  c1_head.class: head
+  c1_loop: "Outer loop over layers"
+  c1_loop.class: axis
+  c1_seed: "Starting point"
+  c1_seed.class: axis
+  c1_stop: "Stopping rule"
+  c1_stop.class: axis
+  c1_reload: "Model reloads per full tune"
+  c1_reload.class: axis
+  c1_perlayer: "Per-layer windows"
+  c1_perlayer.class: axis
+
+  c2_head: "Daniel — newton branch"
+  c2_head.class: head
+  c2_loop: "human edits YAML, resubmits"
+  c2_loop.class: cell
+  c2_seed: "manual, outside the useful range"
+  c2_seed.class: cell
+  c2_stop: "operator judgement"
+  c2_stop.class: cell
+  c2_reload: "≈32"
+  c2_reload.class: cell
+  c2_perlayer: "yes — already implemented"
+  c2_perlayer.class: cell
+
+  c3_head: "This work"
+  c3_head.class: head-ours
+  c3_loop: "automated, in-process"
+  c3_loop.class: ours
+  c3_seed: "seeded from exponent histogram"
+  c3_seed.class: ours
+  c3_stop: "eval budget + measured noise floor"
+  c3_stop.class: ours
+  c3_reload: "1"
+  c3_reload.class: ours
+  c3_perlayer: "yes"
+  c3_perlayer.class: ours
+}

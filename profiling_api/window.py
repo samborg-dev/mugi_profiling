@@ -41,16 +41,6 @@ class TopKWindow(WindowStrategy):
         return topk_indices.min().item(), topk_indices.max().item()
 
 
-class BruteForceWindow(WindowStrategy):
-    def place(self, tensor, nonlinear):
-        raise NotImplementedError("BruteForceWindow is a stub.")
-
-
-class GreedyWindow(WindowStrategy):
-    def place(self, tensor, nonlinear):
-        raise NotImplementedError("GreedyWindow is a stub.")
-
-
 class WindowCriterion:
     def cluster(self, max_sum: float, min_sum: float) -> str:
         raise NotImplementedError
@@ -71,13 +61,8 @@ class AutoCluster(WindowCriterion):
         return "min_cluster" if min_sum > max_sum else "max_cluster"
 
 
-class Centroid(WindowCriterion):
-    def cluster(self, max_sum, min_sum):
-        raise NotImplementedError("Centroid criterion is a stub.")
-
-
-_STRATEGIES = {"topk": TopKWindow, "bruteforce": BruteForceWindow, "greedy": GreedyWindow}
-_CRITERIA = {"auto": AutoCluster, "max": MaxCluster, "min": MinCluster, "centroid": Centroid}
+_STRATEGIES = {"topk": TopKWindow}
+_CRITERIA = {"auto": AutoCluster, "max": MaxCluster, "min": MinCluster}
 
 
 def _parse_nonlinear(tensor_path: str) -> str:
@@ -93,6 +78,16 @@ class WindowSizer:
         self.cfg = cfg
         self.window_size = cfg.window_size
         self.calibration = cfg.window_calibration
+
+        if cfg.window_strategy not in _STRATEGIES:
+            raise ValueError(f"unknown window_strategy {cfg.window_strategy!r}; expected "
+                             f"one of {sorted(_STRATEGIES)}. Perplexity-guided per-layer "
+                             f"search lives in profiling_api.search, not here -- this "
+                             f"family only places a window from a saved histogram.")
+        if cfg.window_criterion not in _CRITERIA:
+            raise ValueError(f"unknown window_criterion {cfg.window_criterion!r}; "
+                             f"expected one of {sorted(_CRITERIA)}")
+
         self.strategy = _STRATEGIES[cfg.window_strategy]()
         self.criterion = _CRITERIA[cfg.window_criterion]()
 
