@@ -196,7 +196,7 @@ def run_noise(args, harness, load_timing):
 
 
 def run_search(args, harness, load_timing):
-    noise_floor, source = resolve_noise_floor(args)
+    noise_floor, source = args._noise_floor
     print(f"noise floor: {noise_floor:.6g} ({source})")
 
     if noise_floor >= 0.007:
@@ -261,6 +261,11 @@ def run_search(args, harness, load_timing):
 def main(argv=None):
     args = parse_args(argv)
     cfg = build_config(args)
+
+    if args.mode == 'search':
+        args._noise_floor = resolve_noise_floor(args)
+        if args.profile_root and not args.no_seed and not os.path.isdir(args.profile_root):
+            raise SystemExit(f"--profile_root {args.profile_root!r} does not exist")
 
     loader = ModelLoader()
     with timed_load(cfg.model_id) as timing:

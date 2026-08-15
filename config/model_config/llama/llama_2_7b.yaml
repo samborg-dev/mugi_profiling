@@ -3,8 +3,8 @@ dataset:
   hf_path: allenai/c4
   config: en
   split: validation
-model: 
-  name: meta-llama/Llama-2-7b-hf
+model:
+  name: NousResearch/Llama-2-7b-hf
   modality: nlp
 nonlinear:
   attention: softmax

@@ -27,24 +27,24 @@ mkdir -p output/window_search
 
 unset PYTHONPATH
 
-source "$(conda info --base)/etc/profile.d/conda.sh"
-if conda env list | grep -q "^mugi_profiling "; then
-    conda activate mugi_profiling
-else
-    echo "conda env 'mugi_profiling' not found -- create it with:"
-    echo "  git show upstream/asplos_2026_ae:environment.yaml > /tmp/environment.yaml"
-    echo "  conda env create -f /tmp/environment.yaml"
+module load pytorch-conda/2.8 || {
+    echo "pytorch-conda/2.8 not available; check 'module spider conda' for the"
+    echo "current name. Delta has no generic anaconda module, and the"
+    echo "environment.yaml on upstream/asplos_2026_ae omits torch, transformers"
+    echo "and datasets, so creating an env from it does not work either."
     exit 1
-fi
+}
 
 python -c "import torch, transformers" || { echo "torch/transformers unavailable"; exit 1; }
 
-if [ -z "${HF_TOKEN:-}" ]; then
-    echo "HF_TOKEN is not set. Export it before sbatch:"
-    echo "  export HF_TOKEN=hf_xxx   (then: sbatch --export=ALL slurm_scripts/window_search.sh)"
-    exit 1
+export HF_HOME="${HF_HOME:-/work/hdd/bebv/$USER/hf}"
+
+if [ -n "${HF_TOKEN:-}" ]; then
+    hf auth login --token "$HF_TOKEN"
+else
+    echo "HF_TOKEN unset; using anonymous access."
+    echo "The configured model must be ungated and already cached under HF_HOME=$HF_HOME."
 fi
-huggingface-cli login --token "$HF_TOKEN"
 
 MODE="${MODE:-noise}"
 REPEATS="${REPEATS:-5}"
