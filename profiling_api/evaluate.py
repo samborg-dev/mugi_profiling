@@ -251,14 +251,14 @@ class WindowEvalHarness:
         import transformers
 
         return {
-            'torch': torch.__version__,
-            'transformers': transformers.__version__,
+            'torch': str(torch.__version__),
+            'transformers': str(transformers.__version__),
             'python': platform.python_version(),
-            'cuda': torch.version.cuda or 'cpu',
+            'cuda': str(torch.version.cuda or 'cpu'),
             'n_devices': torch.cuda.device_count() if torch.cuda.is_available() else 0,
-            'function_name': self.function_name,
-            'profiling': self.profiling,
-            'model': getattr(self.host, 'model_name', ''),
+            'function_name': str(self.function_name),
+            'profiling': bool(self.profiling),
+            'model': str(getattr(self.host, 'model_name', '')),
         }
 
     def to_dataframe(self):
