@@ -12,18 +12,20 @@ from profiling_api.evaluate import WindowEvalHarness, timed_load
 from profiling_api.pipeline import ModelLoader
 from profiling_api.search import CandidateGrid, ProgressiveLayerSearch, SearchBudget
 from profiling_api.seed import HistogramSeeder
-from profiling_api.windows import DEFAULT_GROUP_SIZE, FfnWindow, SoftmaxWindow
+from profiling_api.windows import (DEFAULT_GROUP_SIZE, FfnWindow, SoftmaxWindow,
+                                   WindowAssignment)
 
 
 def parse_args(argv=None):
     p = argparse.ArgumentParser(
         description="Measure LUT-window evaluation cost and the perplexity noise floor "
-                    "(--mode noise), or run the automated per-layer window search "
-                    "(--mode search).")
+                    "(--mode noise), run the automated per-layer window search "
+                    "(--mode search), or re-evaluate a saved assignment and check it "
+                    "reproduces a known perplexity (--mode replay).")
     p.add_argument('--model_config', required=True)
     p.add_argument('--nonlinear_config', required=True)
     p.add_argument('--parameter_config', required=True)
-    p.add_argument('--mode', choices=['noise', 'search'], default='noise')
+    p.add_argument('--mode', choices=['noise', 'search', 'replay'], default='noise')
     p.add_argument('--repeats', type=int, default=5)
     p.add_argument('--n_samples', type=int, default=None)
     p.add_argument('--seq_len', type=int, default=None)
@@ -47,6 +49,10 @@ def parse_args(argv=None):
     p.add_argument('--layers', default=None)
     p.add_argument('--assignment_out', default='output/window_search/assignment.yaml')
     p.add_argument('--trace_out', default='output/window_search/search_trace.csv')
+
+    p.add_argument('--assignment', default=None)
+    p.add_argument('--expect_ppl', type=float, default=None)
+    p.add_argument('--tolerance', type=float, default=0.0)
     return p.parse_args(argv)
 
 
@@ -272,7 +278,7 @@ def run_search(args, harness, load_timing):
     print(f"evaluations           {result.n_evals}")
     print(f"wall                  {result.wall_s / 60:.1f} min")
 
-    print_savings(result.savings_report(harness.n_layers))
+    print_savings(result.savings_report())
 
     trace = result.write_csv(args.trace_out)
     assignment_path = result.assignment.to_yaml(args.assignment_out)
@@ -288,6 +294,35 @@ def run_search(args, harness, load_timing):
     return 0
 
 
+def run_replay(args, harness, load_timing):
+    path = args.assignment or args.assignment_out
+    assignment = WindowAssignment.from_yaml(path)
+
+    print(f"replaying         {os.path.abspath(path)}")
+    print(f"assignment digest {assignment.digest()}  input hash {harness.input_hash}  "
+          f"windows {len(assignment)} over {len(assignment.layers)} layers")
+
+    result = harness.evaluate(assignment)
+    print(f"ppl               {result.ppl!r}")
+    print(f"wall              {result.wall_s:.2f}s")
+    print(f"apply             {result.apply_ms:.2f}ms")
+
+    if args.expect_ppl is None:
+        print("no --expect_ppl given; nothing to check against")
+        return 0
+
+    delta = result.ppl - args.expect_ppl
+    matched = abs(delta) <= args.tolerance
+    print(f"expected          {args.expect_ppl!r}")
+    print(f"delta             {delta:.6g} (tolerance {args.tolerance:g})")
+    print(f"result            {'MATCH' if matched else 'MISMATCH'}")
+
+    if not matched:
+        print("the saved assignment did not reproduce its recorded perplexity; the search "
+              "carried state across evaluations or the inputs differ", file=sys.stderr)
+    return 0 if matched else 1
+
+
 def main(argv=None):
     args = parse_args(argv)
     cfg = build_config(args)
@@ -296,6 +331,12 @@ def main(argv=None):
         args._noise_floor = resolve_noise_floor(args)
         if args.profile_root and not args.no_seed and not os.path.isdir(args.profile_root):
             raise SystemExit(f"--profile_root {args.profile_root!r} does not exist")
+
+    if args.mode == 'replay':
+        path = args.assignment or args.assignment_out
+        if not os.path.isfile(path):
+            raise SystemExit(f"--mode replay needs an assignment YAML; {path!r} does not "
+                             f"exist. Pass --assignment, or run --mode search first.")
 
     loader = ModelLoader()
     with timed_load(cfg.model_id) as timing:
@@ -327,6 +368,8 @@ def main(argv=None):
 
     if args.mode == 'search':
         return run_search(args, harness, load_timing)
+    if args.mode == 'replay':
+        return run_replay(args, harness, load_timing)
     return run_noise(args, harness, load_timing)
 
 

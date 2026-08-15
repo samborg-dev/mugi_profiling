@@ -13,11 +13,15 @@
 
 # MODE=noise  (default) measures the perplexity noise floor and the model load cost.
 # MODE=search runs the automated per-layer window search and needs far more wall time
-#             than the 1:00:00 directive above -- override it at submit time:
+#             than the 1:00:00 directive above -- override it at submit time.
+# MODE=replay re-evaluates a saved assignment.yaml and checks it reproduces a known
+#             perplexity. One eval, so the 1:00:00 default is ample.
 #
 #   MODE=noise  sbatch --export=ALL slurm_scripts/window_search.sh
 #   MODE=search NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml \
 #     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
+#   MODE=replay EXPECT_PPL=4.5373336255593255 \
+#     sbatch --export=ALL slurm_scripts/window_search.sh
 
 set -u
 
@@ -86,6 +90,14 @@ if [ "$MODE" = "search" ]; then
     [ -n "${RADIUS:-}" ] && ARGS+=(--radius "$RADIUS")
     [ -n "${TIME_BUDGET_S:-}" ] && ARGS+=(--time_budget_s "$TIME_BUDGET_S")
     [ -n "${LAYERS:-}" ] && ARGS+=(--layers "$LAYERS")
+
+    python run_window_search.py "${COMMON[@]}" "${ARGS[@]}"
+elif [ "$MODE" = "replay" ]; then
+    ARGS=(--mode replay)
+
+    [ -n "${ASSIGNMENT:-}" ] && ARGS+=(--assignment "$ASSIGNMENT")
+    [ -n "${EXPECT_PPL:-}" ] && ARGS+=(--expect_ppl "$EXPECT_PPL")
+    [ -n "${TOLERANCE:-}" ] && ARGS+=(--tolerance "$TOLERANCE")
 
     python run_window_search.py "${COMMON[@]}" "${ARGS[@]}"
 else
