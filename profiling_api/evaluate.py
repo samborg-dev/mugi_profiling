@@ -29,11 +29,13 @@ class EvalResult:
     assignment_hash: str
     input_hash: str
     provenance: dict = field(default_factory=dict)
+    batch_losses: tuple = ()
 
     def to_row(self) -> dict:
         row = asdict(self)
         row.pop('peak_mem_bytes')
         row.pop('provenance')
+        row.pop('batch_losses')
         for device, peak in self.peak_mem_bytes.items():
             row[f'peak_mem_{device}'] = peak
         row.update({f'prov_{k}': v for k, v in self.provenance.items()})
@@ -245,6 +247,7 @@ class WindowEvalHarness:
             assignment_hash=assignment_hash,
             input_hash=self.input_hash,
             provenance=self._provenance(),
+            batch_losses=tuple(getattr(self.host, 'batch_losses', ()) or ()),
         )
 
     def _provenance(self) -> dict:

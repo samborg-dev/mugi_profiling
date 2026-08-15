@@ -121,12 +121,15 @@ class InferenceModel:
     def run_inference(self):
         self.total_loss = 0.0
         self.num_batches = 0
+        self.batch_losses = []
         for batch in self.inputs:
             batched_loss = self.compute_loss(
                 batch=batch
             )
 
-            self.total_loss += batched_loss.item()
+            loss_value = batched_loss.item()
+            self.total_loss += loss_value
+            self.batch_losses.append(loss_value)
             self.num_batches += 1
             del batch, batched_loss
             torch.cuda.empty_cache()

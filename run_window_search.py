@@ -1,5 +1,7 @@
 import argparse
+import math
 import os
+import random
 import statistics
 import sys
 
@@ -123,6 +125,30 @@ def summarise(results):
     }
 
 
+def bootstrap_ci(batch_losses, n_resamples=10000, confidence=95.0, seed=0):
+    losses = [x for x in batch_losses if x == x]
+    n = len(losses)
+    if n < 2:
+        return {'bootstrap_n_batches': n, 'bootstrap_resamples': 0,
+                'ppl_ci_low': float('nan'), 'ppl_ci_high': float('nan'),
+                'ppl_ci_width': float('nan')}
+
+    rng = random.Random(seed)
+    draws = []
+    for _ in range(n_resamples):
+        total = 0.0
+        for _ in range(n):
+            total += losses[rng.randrange(n)]
+        draws.append(math.exp(total / n))
+    draws.sort()
+
+    tail = (100.0 - confidence) / 200.0
+    lo = draws[int(tail * n_resamples)]
+    hi = draws[min(n_resamples - 1, int((1.0 - tail) * n_resamples))]
+    return {'bootstrap_n_batches': n, 'bootstrap_resamples': n_resamples,
+            'ppl_ci_low': lo, 'ppl_ci_high': hi, 'ppl_ci_width': hi - lo}
+
+
 def reload_savings(load_s, eval_s, n_evals, n_layers):
     search_s = n_evals * eval_s
     reloading_s = n_layers * load_s + search_s
@@ -167,12 +193,16 @@ def run_noise(args, harness, load_timing):
               f"wall={r.wall_s:.2f}s apply={r.apply_ms:.2f}ms")
 
     stats = summarise(results)
+    stats.update(bootstrap_ci(results[0].batch_losses))
     path = harness.write_csv(args.out)
 
     print()
     print(f"ppl mean          {stats['ppl_mean']:.6f}")
     print(f"ppl spread        {stats['ppl_spread']:.6g}")
     print(f"ppl stdev         {stats['ppl_stdev']:.6g}")
+    print(f"ppl ci95          [{stats['ppl_ci_low']:.6f}, {stats['ppl_ci_high']:.6f}] "
+          f"width {stats['ppl_ci_width']:.6g} "
+          f"over {stats['bootstrap_n_batches']} batches")
     print(f"wall/eval median  {stats['wall_s_median']:.2f}s")
     print(f"apply/eval median {stats['apply_ms_median']:.2f}ms")
     print(f"tokens/eval       {stats['n_tokens']}")
