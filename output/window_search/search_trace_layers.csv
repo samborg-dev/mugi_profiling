@@ -1,0 +1,5 @@
+layer,site,seed_source,seed_anchor,seed_anchor_side,chosen_anchor,chosen_anchor_side,exp_dim,group_size,seed_ppl,best_ppl,improvement,changed,n_candidates,n_evals,wall_s,stop_reason
+0,attention,fallback,2,max,1,max,10,256,4.731203917968714,4.7076212728108295,0.023582645157884663,True,4,4,104.66276843799278,noise_floor
+1,attention,fallback,2,max,3,max,10,256,4.7076212728108295,4.699149711374873,0.00847156143595651,True,5,5,131.18723333999515,noise_floor
+2,attention,fallback,2,max,1,max,10,256,4.699149711374873,4.574533848351099,0.1246158630237737,True,4,4,104.63505552499555,noise_floor
+3,attention,fallback,2,max,3,max,10,256,4.574533848351099,4.5373336255593255,0.03720022279177382,True,5,5,130.98965057404712,noise_floor

@@ -1,0 +1,36 @@
+HF_TOKEN unset; using anonymous access.
+The configured model must be ungated and already cached under HF_HOME=/work/hdd/bebv/sborges/hf.
+python: /sw/rh9.4/user/python/conda-env/pytorch-2.8-cu128/bin/python
+mode=search repeats=5 n_samples=8
+NVIDIA H200, 143771 MiB
+NVIDIA H200, 143771 MiB
+model load: 48.1s total, 36.5s weights, 6.74B params on cuda
+baseline (unpatched) ppl: 3.896045
+noise floor: 0.001 (--noise_floor 0.001)
+seeded 0/32 layers from histograms, 32 from fallback
+seed assignment ppl=4.731204
+layer   0: max+2 -> max+1  ppl=4.707621 gain=0.023583  evals=4 stop=noise_floor
+layer   1: max+2 -> max+3  ppl=4.699150 gain=0.008472  evals=5 stop=noise_floor
+layer   2: max+2 -> max+1  ppl=4.574534 gain=0.124616  evals=4 stop=noise_floor
+layer   3: max+2 -> max+3  ppl=4.537334 gain=0.037200  evals=5 stop=noise_floor
+
+baseline (unpatched)  3.896045
+seed assignment       4.731204
+per-layer search      4.537334
+improvement           0.193870 over 4/4 layers
+evaluations           20
+wall                  8.7 min
+
+reload cost (Dr. Wu 8/03: 'every time loading versus no loading')
+  model load           48.1s
+  eval (median)        26.03s
+  reload per layer     32 x load + 20 x eval = 34.3 min
+  model resident       1 x load + 20 x eval = 9.5 min
+  saved                24.8 min (3.6x)
+  lower bound: charges nothing for Slurm queue wait or for editing the YAML by hand between jobs
+
+wrote             /u/sborges/mugi_profiling/output/window_search/search_trace.csv
+wrote             /u/sborges/mugi_profiling/output/window_search/assignment.yaml
+wrote             /u/sborges/mugi_profiling/output/window_search/search_trace_summary.yaml
+wrote             /u/sborges/mugi_profiling/output/window_search/cost_and_noise.csv
+exit code: 0

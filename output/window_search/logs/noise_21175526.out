@@ -1,0 +1,30 @@
+HF_TOKEN unset; using anonymous access.
+The configured model must be ungated and already cached under HF_HOME=/work/hdd/bebv/sborges/hf.
+python: /sw/rh9.4/user/python/conda-env/pytorch-2.8-cu128/bin/python
+mode=noise repeats=2 n_samples=8
+NVIDIA H200, 143771 MiB
+NVIDIA H200, 143771 MiB
+model load: 39.7s total, 30.1s weights, 6.74B params on cuda
+baseline (unpatched) ppl: 3.896045
+assignment digest: a2cdd56dd1dfd360  input hash: a7ffcf49b17fa3fa  layers: 32
+  repeat 1/2: ppl=4.731204 wall=26.05s apply=4.28ms
+  repeat 2/2: ppl=4.731204 wall=26.01s apply=4.85ms
+
+ppl mean          4.731204
+ppl spread        0
+ppl stdev         0
+ppl ci95          [3.702366, 6.708355] width 3.00599 over 4 batches
+wall/eval median  26.03s
+apply/eval median 4.57ms
+tokens/eval       32768
+wrote             /u/sborges/mugi_profiling/output/window_search/cost_and_noise.csv
+
+reload cost (Dr. Wu 8/03: 'every time loading versus no loading')
+  model load           39.7s
+  eval (median)        26.03s
+  reload per layer     32 x load + 512 x eval = 243.3 min
+  model resident       1 x load + 512 x eval = 222.8 min
+  saved                20.5 min (1.1x)
+  lower bound: charges nothing for Slurm queue wait or for editing the YAML by hand between jobs
+wrote             /u/sborges/mugi_profiling/output/window_search/cost_and_noise_summary.yaml
+exit code: 0
