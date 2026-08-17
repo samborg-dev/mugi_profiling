@@ -1,0 +1,43 @@
+direction: right
+
+title: Window search — unpaired vs paired interval {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+losses: {
+  shape: class
+  "EvalResult.batch_losses": "float[n_batches]"
+  "scored on": "the same batches for every candidate in a layer"
+}
+
+# --- unpaired: uncertainty of a single perplexity estimate ---
+unpaired: "bootstrap_ci\nrun_window_search.py" { shape: hexagon }
+unpaired_out: {
+  shape: class
+  resamples: "candidate losses"
+  estimates: "one absolute PPL"
+  "between-batch variance": retained
+  ci_width: 1.694
+  "narrows as": "1 / sqrt(n)"
+}
+
+# --- paired: uncertainty of the difference ---
+paired: "paired_ppl_ci\nprofiling_api/search.py" { shape: hexagon }
+paired_out: {
+  shape: class
+  resamples: "per-batch differences"
+  estimates: "candidate - incumbent"
+  "between-batch variance": cancels
+  ci_width: 0.0011
+  interval: "[0.0087, 0.0098]"
+}
+
+extra: "no extra evaluations" { shape: page }
+
+losses -> unpaired
+losses -> paired
+unpaired -> unpaired_out
+paired -> paired_out
+paired -> extra: reuses losses already returned { style.stroke-dash: 4 }

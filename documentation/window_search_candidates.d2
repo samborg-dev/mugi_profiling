@@ -1,0 +1,55 @@
+direction: right
+
+title: Window search — candidate grid {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+seed: "seed WindowSpec" { shape: page }
+
+grid: "CandidateGrid" {
+  shape: class
+  anchors: "list[int]"
+  sides: "list[str]"
+  exp_dims: "list[int] | None"
+  radius: int
+  "+candidates_for(seed)": "list[WindowSpec]"
+}
+
+before: "before" {
+  shape: class
+  anchor: varied
+  side: varied
+  exp_dim: "copied from seed"
+  group_size: "copied from seed"
+}
+
+after: "after" {
+  shape: class
+  anchor: varied
+  side: varied
+  exp_dim: "swept via exp_dims"
+  group_size: "copied from seed"
+  ordering: "L1 over (anchor, exp_dim)"
+}
+
+covers: "covers spans exp_dim bins\nexp_dim is the window size" { shape: page }
+
+compat: "exp_dims = None" {
+  shape: class
+  reproduces: "newton 16-candidate set"
+  asserted: "byte-identical"
+}
+
+budget: "MAX_EVALS_PER_LAYER | RADIUS" { shape: page }
+
+cli: "--exp_dims 8,10,12\nEXP_DIMS=8,10,12" { shape: page }
+
+seed -> grid
+grid -> before
+grid -> after
+covers -> after: why exp_dim is the knob { style.stroke-dash: 4 }
+after -> compat
+after -> budget: grid multiplies, bound it
+cli -> grid: sets exp_dims

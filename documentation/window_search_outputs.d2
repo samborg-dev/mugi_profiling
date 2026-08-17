@@ -1,0 +1,58 @@
+direction: right
+
+title: Window search — outputs {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+search: "ProgressiveLayerSearch" { style.stroke-dash: 4 }
+
+result: "SearchResult" {
+  shape: class
+  outcomes: "one entry per layer as it is frozen"
+  stop_reason: "converged | budget | time_exhausted"
+  "+locking_curve()": "list[(layers_locked, ppl)]"
+}
+
+assignment: "assignment.yaml" {
+  shape: class
+  dir: "output/window_search/"
+  holds: "per-layer WindowSpec"
+}
+
+trace: "search_trace_<TAG>.csv" {
+  shape: class
+  row: "one per evaluation"
+  cols: "ppl, paired_ci_low/high, prov_*"
+}
+
+curve: "<TAG>_locking_curve.csv" {
+  shape: class
+  x: layers_locked
+  y: ppl
+  source: "SearchResult.outcomes"
+  monotone: "by construction, tracks the incumbent"
+}
+
+summary: "cost_and_noise_summary.yaml" {
+  shape: page
+}
+
+tag: "TAG namespaces every artifact\n#SBATCH --output uses %j" { shape: page }
+
+budget_stop: "TIME_BUDGET_S" {
+  shape: class
+  "set below": "the Slurm wall"
+  "on expiry": "finalise at seed, then write"
+  "if SIGKILLed instead": "no artifacts at all"
+}
+
+search -> result
+result -> assignment: writes
+result -> trace: writes
+result -> curve: writes
+result -> summary: writes
+tag -> assignment: prevents collision { style.stroke-dash: 4 }
+tag -> trace: prevents collision { style.stroke-dash: 4 }
+budget_stop -> result: guarantees write_csv runs

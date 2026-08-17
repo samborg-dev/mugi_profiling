@@ -1,0 +1,63 @@
+grid-rows: 2
+grid-gap: 70
+
+title: Window search — why repeats measure no noise {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+# --- row 1: the measurement ---
+measure: "" {
+  direction: right
+  style.stroke: transparent
+
+  run: "MODE=noise REPEATS=5" { shape: oval }
+  eval: "evaluate_harness" { shape: hexagon }
+
+  deterministic: {
+    shape: class
+    "same weights": ""
+    "same data": ""
+    "same batch order": ""
+    "result": "bit-identical perplexity"
+  }
+
+  summarise: "summarise()" { shape: hexagon }
+
+  summary: "cost_and_noise_summary.yaml" { shape: page }
+
+  run -> eval
+  eval -> deterministic: 5 repeats
+  deterministic -> summarise
+  summarise -> summary: writes
+}
+
+# --- row 2: what consumes it ---
+consume: "" {
+  direction: right
+  style.stroke: transparent
+
+  spread: {
+    shape: class
+    ppl_spread: "max - min = 0.0"
+    ppl_stdev: 0.0
+    ppl_ci_width: 1.694
+  }
+
+  resolve: "resolve_noise_floor" { shape: hexagon }
+
+  rule: {
+    shape: class
+    "from ppl_spread": "(incumbent - candidate) > 0.0"
+    "admits": "any improvement"
+  }
+
+  effect: "per-layer effect 0.007" { shape: page }
+
+  spread -> resolve: consumed by
+  resolve -> rule
+  effect -> rule: 242x smaller than ppl_ci_width { style.stroke-dash: 4 }
+}
+
+measure.summary -> consume.spread: records

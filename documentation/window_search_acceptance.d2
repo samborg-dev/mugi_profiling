@@ -1,0 +1,44 @@
+direction: down
+
+title: Window search — acceptance rule {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+budget: {
+  shape: class
+  "SearchBudget.paired": "bool = False"
+  noise_floor: float
+  noise_metric: "ci_width | spread"
+}
+
+accept: "ProgressiveLayerSearch._accept" { shape: hexagon }
+
+paired_ci: "paired_ppl_ci" { shape: hexagon }
+
+gate_paired: "paired_ci_low > noise_floor" { shape: diamond }
+gate_scalar: "(incumbent - candidate) > noise_floor" { shape: diamond }
+
+promote: "candidate becomes incumbent"
+keep: "incumbent held"
+
+trace: {
+  shape: class
+  file: "search_trace*.csv"
+  paired_ci_low: float
+  paired_ci_high: float
+  "empty when": "the run fell back to unpaired"
+}
+
+budget -> accept
+accept -> paired_ci: "paired = True"
+accept -> gate_scalar: "paired = False"
+paired_ci -> gate_paired
+paired_ci -> gate_scalar: "no batch losses | count mismatch | NaN" { style.stroke-dash: 4 }
+gate_paired -> promote: "yes"
+gate_paired -> keep: "no"
+gate_scalar -> promote: "yes"
+gate_scalar -> keep: "no"
+gate_paired -> trace: writes
+gate_scalar -> trace: writes
