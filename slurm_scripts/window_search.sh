@@ -8,8 +8,8 @@
 #SBATCH --gres=gpu:2
 #SBATCH --mem=64g
 #SBATCH --job-name=lut_window_search
-#SBATCH --error=window_search_error.txt
-#SBATCH --output=window_search_output.txt
+#SBATCH --error=window_search_%j.err
+#SBATCH --output=window_search_%j.out
 
 # MODE=noise  (default) measures the perplexity noise floor and the model load cost.
 # MODE=search runs the automated per-layer window search and needs far more wall time
@@ -17,8 +17,8 @@
 # MODE=replay re-evaluates a saved assignment.yaml and checks it reproduces a known
 #             perplexity. One eval, so the 1:00:00 default is ample.
 #
-#   MODE=noise  sbatch --export=ALL slurm_scripts/window_search.sh
-#   MODE=search NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml \
+#   MODE=noise  TAG=run1 sbatch --export=ALL slurm_scripts/window_search.sh
+#   MODE=search TAG=run1 NOISE_SUMMARY=output/window_search/cost_and_noise_run1_summary.yaml \
 #     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
 #   MODE=replay EXPECT_PPL=4.5373336255593255 \
 #     sbatch --export=ALL slurm_scripts/window_search.sh
@@ -31,7 +31,7 @@
 # EXP_DIMS sweeps the window size alongside the anchor. It multiplies the candidate
 # grid by the number of sizes, so pair it with MAX_EVALS_PER_LAYER or RADIUS:
 #   MODE=search EXP_DIMS=8,10,12 RADIUS=2 MAX_EVALS_PER_LAYER=12 \
-#     NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml \
+#     NOISE_SUMMARY=output/window_search/cost_and_noise_run1_summary.yaml \
 #     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
 #
 # PAIRED=1 switches acceptance to a paired bootstrap over per-batch losses. Because
@@ -72,13 +72,14 @@ fi
 MODE="${MODE:-noise}"
 REPEATS="${REPEATS:-5}"
 N_SAMPLES="${N_SAMPLES:-8}"
+TAG="${TAG:-${SLURM_JOB_ID:-manual}}"
 
 COMMON=(
     --model_config config/model_config/llama/llama_2_7b.yaml
     --nonlinear_config config/nonlinear_config/nonlinear_config.yaml
     --parameter_config config/parameter_config/parameter_config.yaml
     --n_samples "$N_SAMPLES"
-    --out output/window_search/cost_and_noise.csv
+    --out "output/window_search/cost_and_noise_${TAG}.csv"
 )
 
 echo "python: $(which python)"
@@ -89,7 +90,9 @@ if [ "$MODE" = "search" ]; then
     SEARCH_REPEATS="${SEARCH_REPEATS:-1}"
     PATIENCE="${PATIENCE:-3}"
 
-    ARGS=(--mode search --search_repeats "$SEARCH_REPEATS" --patience "$PATIENCE")
+    ARGS=(--mode search --search_repeats "$SEARCH_REPEATS" --patience "$PATIENCE"
+          --assignment_out "output/window_search/assignment_${TAG}.yaml"
+          --trace_out "output/window_search/search_trace_${TAG}.csv")
 
     if [ -n "${NOISE_FLOOR:-}" ]; then
         ARGS+=(--noise_floor "$NOISE_FLOOR")
@@ -97,7 +100,7 @@ if [ "$MODE" = "search" ]; then
         ARGS+=(--noise_summary "$NOISE_SUMMARY")
     else
         echo "MODE=search needs a measured noise floor. Run MODE=noise first, then"
-        echo "  NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml"
+        echo "  NOISE_SUMMARY=output/window_search/cost_and_noise_run1_summary.yaml"
         echo "or set NOISE_FLOOR=<float> explicitly."
         exit 1
     fi
