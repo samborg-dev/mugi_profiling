@@ -33,6 +33,14 @@
 #   MODE=search EXP_DIMS=8,10,12 RADIUS=2 MAX_EVALS_PER_LAYER=12 \
 #     NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml \
 #     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
+#
+# PAIRED=1 switches acceptance to a paired bootstrap over per-batch losses. Because
+# every candidate is scored on the same batches, the between-batch variance cancels
+# and the interval is orders of magnitude tighter than the unpaired ci_width. Use it
+# when the measured ci_width is far above the ~0.007/layer effect size. It costs no
+# extra evaluations -- it reuses the batch losses each eval already returns:
+#   MODE=search PAIRED=1 NOISE_FLOOR=0 \
+#     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
 
 set -u
 
@@ -103,6 +111,9 @@ if [ "$MODE" = "search" ]; then
     [ -n "${LAYERS:-}" ] && ARGS+=(--layers "$LAYERS")
     [ -n "${NOISE_METRIC:-}" ] && ARGS+=(--noise_metric "$NOISE_METRIC")
     [ -n "${EXP_DIMS:-}" ] && ARGS+=(--exp_dims "$EXP_DIMS")
+    [ -n "${PAIRED:-}" ] && ARGS+=(--paired)
+    [ -n "${PAIRED_CONFIDENCE:-}" ] && ARGS+=(--paired_confidence "$PAIRED_CONFIDENCE")
+    [ -n "${PAIRED_RESAMPLES:-}" ] && ARGS+=(--paired_resamples "$PAIRED_RESAMPLES")
 
     python run_window_search.py "${COMMON[@]}" "${ARGS[@]}"
 elif [ "$MODE" = "replay" ]; then

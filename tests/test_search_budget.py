@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import pytest
 
 from profiling_api.search import (CandidateGrid, LayerOutcome, ProgressiveLayerSearch,
-                                  SearchBudget, StopReason)
+                                  SearchBudget, StopReason, paired_ppl_ci)
 from profiling_api.windows import ATTENTION, FFN, FfnWindow, SoftmaxWindow, WindowAssignment
 
 SEED_ANCHOR = 2
@@ -397,6 +397,84 @@ class TestLockingCurve:
         curve = search(harness).run().locking_curve()
         assert len(curve) == harness.n_layers + 1
         assert all(math.isfinite(row['ppl']) for row in curve)
+
+
+class LossHarness(FakeHarness):
+    def __init__(self, n_batches=64, spread=0.4, shift=0.02, **kwargs):
+        super().__init__(**kwargs)
+        self.n_batches = n_batches
+        self.spread = spread
+        self.shift = shift
+
+    def evaluate(self, assignment, record=True):
+        result = super().evaluate(assignment)
+        offset = (result.ppl - self.base) * self.shift
+        result.batch_losses = tuple(
+            1.8 + self.spread * math.sin(i) + offset for i in range(self.n_batches))
+        return result
+
+
+class TestPairedAcceptance:
+    def test_the_interval_is_none_without_enough_batches(self):
+        assert paired_ppl_ci((1.8,), (1.7,)) is None
+        assert paired_ppl_ci((), ()) is None
+
+    def test_mismatched_batch_counts_are_refused(self):
+        assert paired_ppl_ci((1.8, 1.9, 2.0), (1.7, 1.8)) is None
+
+    def test_a_nan_loss_is_refused(self):
+        assert paired_ppl_ci((1.8, float('nan'), 2.0), (1.7, 1.8, 1.9)) is None
+
+    def test_identical_losses_give_an_interval_containing_zero(self):
+        losses = tuple(1.8 + 0.3 * math.sin(i) for i in range(64))
+        lo, hi = paired_ppl_ci(losses, losses, n_resamples=500)
+        assert lo == 0.0 and hi == 0.0
+
+    def test_a_uniformly_better_candidate_gives_a_positive_interval(self):
+        inc = tuple(1.8 + 0.3 * math.sin(i) for i in range(64))
+        cand = tuple(x - 0.05 for x in inc)
+        lo, hi = paired_ppl_ci(inc, cand, n_resamples=500)
+        assert lo > 0 and hi > 0
+
+    def test_pairing_is_tighter_than_the_unpaired_spread(self):
+        inc = tuple(1.8 + 0.6 * math.sin(i) for i in range(64))
+        cand = tuple(x - 0.01 for x in inc)
+        lo, hi = paired_ppl_ci(inc, cand, n_resamples=500)
+        assert (hi - lo) < 0.5
+
+    def test_paired_mode_falls_back_when_the_host_records_no_batches(self):
+        harness = FakeHarness()
+        result = ProgressiveLayerSearch(
+            harness, budget=SearchBudget(paired=True, noise_floor=0.0, patience=99),
+            progress=lambda _: None).run()
+        assert result.final_ppl < result.seed_ppl
+        assert all(r.paired_ci_low is None for r in result.records())
+
+    def test_paired_mode_records_the_interval_when_batches_exist(self):
+        harness = LossHarness()
+        result = ProgressiveLayerSearch(
+            harness, budget=SearchBudget(paired=True, noise_floor=0.0, patience=99),
+            progress=lambda _: None).run()
+        scored = [r for r in result.records() if not r.is_seed]
+        assert any(r.paired_ci_low is not None for r in scored)
+
+    def test_a_paired_win_still_covers_every_layer(self):
+        harness = LossHarness()
+        result = ProgressiveLayerSearch(
+            harness, budget=SearchBudget(paired=True, noise_floor=0.0, patience=99),
+            progress=lambda _: None).run()
+        assert len(result.assignment.layers) == harness.n_layers
+
+    def test_a_confidence_outside_the_open_interval_is_rejected(self):
+        with pytest.raises(ValueError, match="paired_confidence"):
+            SearchBudget(paired=True, paired_confidence=100.0)
+
+    def test_non_positive_resamples_are_rejected(self):
+        with pytest.raises(ValueError, match="paired_resamples"):
+            SearchBudget(paired=True, paired_resamples=0)
+
+    def test_the_default_search_is_unpaired(self):
+        assert SearchBudget().paired is False
 
 
 class TestReporting:

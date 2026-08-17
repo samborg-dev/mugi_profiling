@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+import random
 import statistics
 import time
 from dataclasses import asdict, dataclass, field
@@ -75,6 +76,35 @@ class CandidateGrid:
                      for anchor, side, dim in ordered)
 
 
+def paired_ppl_ci(incumbent_losses: Sequence[float], candidate_losses: Sequence[float],
+                  n_resamples: int = 2000, confidence: float = 95.0,
+                  seed: int = 0) -> Optional[Tuple[float, float]]:
+    n = len(incumbent_losses)
+    if n < 2 or len(candidate_losses) != n:
+        return None
+    if not all(math.isfinite(x) for x in incumbent_losses):
+        return None
+    if not all(math.isfinite(x) for x in candidate_losses):
+        return None
+
+    rng = random.Random(seed)
+    draws = []
+    for _ in range(n_resamples):
+        inc = 0.0
+        cand = 0.0
+        for _ in range(n):
+            j = rng.randrange(n)
+            inc += incumbent_losses[j]
+            cand += candidate_losses[j]
+        draws.append(math.exp(inc / n) - math.exp(cand / n))
+    draws.sort()
+
+    tail = (100.0 - confidence) / 200.0
+    lo = draws[int(tail * n_resamples)]
+    hi = draws[min(n_resamples - 1, int((1.0 - tail) * n_resamples))]
+    return lo, hi
+
+
 @dataclass(frozen=True)
 class SearchBudget:
     max_evals: Optional[int] = None
@@ -83,6 +113,9 @@ class SearchBudget:
     noise_floor: float = 0.0
     patience: int = 3
     time_budget_s: Optional[float] = None
+    paired: bool = False
+    paired_confidence: float = 95.0
+    paired_resamples: int = 2000
 
     def __post_init__(self):
         if self.repeats < 1:
@@ -91,6 +124,11 @@ class SearchBudget:
             raise ValueError(f"patience must be >= 1, got {self.patience}")
         if self.noise_floor < 0:
             raise ValueError(f"noise_floor must be >= 0, got {self.noise_floor}")
+        if not 0.0 < self.paired_confidence < 100.0:
+            raise ValueError(f"paired_confidence must be in (0, 100), got "
+                             f"{self.paired_confidence}")
+        if self.paired_resamples < 1:
+            raise ValueError(f"paired_resamples must be >= 1, got {self.paired_resamples}")
 
     @property
     def evals_per_candidate(self) -> int:
@@ -116,6 +154,8 @@ class CandidateRecord:
     wall_s: float
     apply_ms: float
     assignment_hash: str
+    paired_ci_low: Optional[float] = None
+    paired_ci_high: Optional[float] = None
 
     def to_row(self) -> dict:
         row = asdict(self)
@@ -354,6 +394,7 @@ class ProgressiveLayerSearch:
         self.n_evals = 0
         self._t0 = None
         self._wall = []
+        self._incumbent_losses = ()
 
     def seed_assignment(self) -> Tuple[WindowAssignment, List[LayerSeed]]:
         ffn = self.ffn or self.harness.seed_ffn
@@ -366,6 +407,7 @@ class ProgressiveLayerSearch:
         self._t0 = time.perf_counter()
         self.n_evals = 0
         self._wall = []
+        self._incumbent_losses = ()
 
         assignment, seeds = self.seed_assignment()
         by_layer = {s.layer: s for s in seeds}
@@ -377,7 +419,7 @@ class ProgressiveLayerSearch:
         incumbent = float('inf')
         seed_ppl = None
         if self.measure_seed:
-            seed_ppl = self._evaluate(assignment)[0]
+            seed_ppl, _, _, self._incumbent_losses = self._evaluate(assignment)
             incumbent = seed_ppl if math.isfinite(seed_ppl) else float('inf')
             self.progress(f"seed assignment ppl={seed_ppl:.6f}")
 
@@ -432,6 +474,7 @@ class ProgressiveLayerSearch:
 
         best_window = seed_window
         best_ppl = incumbent
+        best_losses = self._incumbent_losses
         misses = 0
         layer_evals = 0
         stop_reason = StopReason.EXHAUSTED
@@ -459,13 +502,14 @@ class ProgressiveLayerSearch:
                 break
 
             trial = frozen.with_override(layer, self.site, candidate)
-            score, ppls, wall_s, apply_ms = self._evaluate_candidate(trial)
+            score, ppls, wall_s, apply_ms, losses = self._evaluate_candidate(trial)
             layer_evals += charge
 
             previous = best_ppl
-            accepted = (best_ppl - score) > self.budget.noise_floor
+            accepted, ci = self._accept(best_ppl, score, best_losses, losses)
             if accepted:
                 best_window, best_ppl, misses = candidate, score, 0
+                best_losses = losses
             else:
                 misses += 1
 
@@ -475,7 +519,9 @@ class ProgressiveLayerSearch:
                 group_size=candidate.group_size, ppl=score, ppl_repeats=ppls,
                 n_evals=charge, diverged=not math.isfinite(score), accepted=accepted,
                 is_seed=False, delta_vs_incumbent=previous - score,
-                wall_s=wall_s, apply_ms=apply_ms, assignment_hash=trial.digest()))
+                wall_s=wall_s, apply_ms=apply_ms, assignment_hash=trial.digest(),
+                paired_ci_low=ci[0] if ci else None,
+                paired_ci_high=ci[1] if ci else None))
 
             if misses >= self.budget.patience:
                 stop_reason = StopReason.NOISE_FLOOR
@@ -484,6 +530,8 @@ class ProgressiveLayerSearch:
         if not math.isfinite(best_ppl):
             stop_reason = StopReason.DIVERGED
 
+        self._incumbent_losses = best_losses
+
         return LayerOutcome(
             layer=layer, site=self.site, seed=seed, chosen=best_window,
             seed_ppl=incumbent, best_ppl=best_ppl, n_candidates=len(records) - 1,
@@ -491,23 +539,47 @@ class ProgressiveLayerSearch:
             stop_reason=stop_reason, records=tuple(records))
 
     def _evaluate_candidate(self, assignment: WindowAssignment
-                            ) -> Tuple[float, Tuple[float, ...], float, float]:
-        ppls, walls, applies = [], [], []
+                            ) -> Tuple[float, Tuple[float, ...], float, float, tuple]:
+        ppls, walls, applies, losses = [], [], [], []
         for _ in range(self.budget.repeats):
-            ppl, wall_s, apply_ms = self._evaluate(assignment)
+            ppl, wall_s, apply_ms, batch_losses = self._evaluate(assignment)
             ppls.append(ppl)
             walls.append(wall_s)
             applies.append(apply_ms)
+            if batch_losses:
+                losses.append(batch_losses)
 
         finite = [p for p in ppls if math.isfinite(p)]
         score = statistics.fmean(finite) if finite else float('inf')
-        return score, tuple(ppls), sum(walls), statistics.median(applies)
 
-    def _evaluate(self, assignment: WindowAssignment) -> Tuple[float, float, float]:
+        pooled = ()
+        if losses and len({len(l) for l in losses}) == 1:
+            pooled = tuple(statistics.fmean(batch) for batch in zip(*losses))
+
+        return score, tuple(ppls), sum(walls), statistics.median(applies), pooled
+
+    def _accept(self, incumbent: float, score: float, incumbent_losses: tuple,
+                candidate_losses: tuple) -> Tuple[bool, Optional[Tuple[float, float]]]:
+        if not math.isfinite(score):
+            return False, None
+
+        if not self.budget.paired:
+            return (incumbent - score) > self.budget.noise_floor, None
+
+        ci = paired_ppl_ci(incumbent_losses, candidate_losses,
+                           n_resamples=self.budget.paired_resamples,
+                           confidence=self.budget.paired_confidence)
+        if ci is None:
+            return (incumbent - score) > self.budget.noise_floor, None
+
+        return ci[0] > self.budget.noise_floor, ci
+
+    def _evaluate(self, assignment: WindowAssignment) -> Tuple[float, float, float, tuple]:
         result = self.harness.evaluate(assignment)
         self.n_evals += 1
         self._wall.append(result.wall_s)
-        return result.ppl, result.wall_s, result.apply_ms
+        losses = tuple(getattr(result, 'batch_losses', ()) or ())
+        return result.ppl, result.wall_s, result.apply_ms, losses
 
     def _can_charge(self, charge: int) -> bool:
         if self.budget.max_evals is None:

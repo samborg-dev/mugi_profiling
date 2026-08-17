@@ -47,6 +47,9 @@ def parse_args(argv=None):
     p.add_argument('--patience', type=int, default=3)
     p.add_argument('--radius', type=int, default=None)
     p.add_argument('--exp_dims', default=None)
+    p.add_argument('--paired', action='store_true')
+    p.add_argument('--paired_confidence', type=float, default=95.0)
+    p.add_argument('--paired_resamples', type=int, default=2000)
     p.add_argument('--time_budget_s', type=float, default=None)
     p.add_argument('--layers', default=None)
     p.add_argument('--assignment_out', default='output/window_search/assignment.yaml')
@@ -309,7 +312,18 @@ def run_search(args, harness, load_timing):
     budget = SearchBudget(max_evals=args.max_evals,
                           max_evals_per_layer=args.max_evals_per_layer,
                           repeats=args.search_repeats, noise_floor=noise_floor,
-                          patience=args.patience, time_budget_s=args.time_budget_s)
+                          patience=args.patience, time_budget_s=args.time_budget_s,
+                          paired=args.paired,
+                          paired_confidence=args.paired_confidence,
+                          paired_resamples=args.paired_resamples)
+
+    if args.paired:
+        print(f"acceptance: paired bootstrap, {args.paired_confidence:g}% CI over "
+              f"{args.paired_resamples} resamples; a candidate wins only if the whole "
+              f"interval clears {noise_floor:.6g}")
+    else:
+        print(f"acceptance: unpaired, candidate wins if it beats the incumbent by more "
+              f"than {noise_floor:.6g}")
 
     grid = CandidateGrid(radius=args.radius, exp_dims=parse_exp_dims(args.exp_dims))
     layers = parse_layers(args.layers, harness.n_layers)
