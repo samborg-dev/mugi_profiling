@@ -260,7 +260,7 @@ class WindowEvalHarness:
             'cuda': str(torch.version.cuda or 'cpu'),
             'n_devices': torch.cuda.device_count() if torch.cuda.is_available() else 0,
             'function_name': str(self.function_name),
-            'profiling': bool(self.profiling),
+            'profiling': str(self.profiling),
             'model': str(getattr(self.host, 'model_name', '')),
         }
 
