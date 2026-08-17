@@ -305,6 +305,100 @@ class TestCandidateGrid:
             assert window.exp_dim == 11 and window.group_size == 128
 
 
+class TestWindowSizeSweep:
+    def test_exp_dims_actually_vary_the_window_size(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        candidates = CandidateGrid(exp_dims=(8, 10, 12)).candidates_for(seed)
+        assert {w.exp_dim for w in candidates} == {8, 10, 12}
+
+    def test_the_sweep_multiplies_the_grid(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        assert len(CandidateGrid(exp_dims=(8, 10, 12)).candidates_for(seed)) == 16 * 3
+
+    def test_the_seed_window_is_still_offered_first(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        candidates = CandidateGrid(exp_dims=(8, 12, 16)).candidates_for(seed)
+        assert candidates[0] == seed
+
+    def test_the_seed_size_is_not_duplicated_when_it_is_already_listed(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        candidates = CandidateGrid(exp_dims=(8, 10, 12)).candidates_for(seed)
+        assert len(candidates) == len(set(candidates))
+
+    def test_ordering_is_nearest_first_in_both_dimensions(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        candidates = CandidateGrid(exp_dims=(8, 10, 12)).candidates_for(seed)
+        distances = [abs(w.anchor - seed.anchor) + abs(w.exp_dim - seed.exp_dim)
+                     for w in candidates]
+        assert distances == sorted(distances)
+
+    def test_group_size_is_still_inherited(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max', group_size=128)
+        candidates = CandidateGrid(exp_dims=(8, 12)).candidates_for(seed)
+        assert all(w.group_size == 128 for w in candidates)
+
+    def test_no_sweep_reproduces_the_newton_grid_exactly(self):
+        seed = SoftmaxWindow(exp_dim=16, anchor=2, anchor_side='max')
+        assert (CandidateGrid(exp_dims=None).candidates_for(seed)
+                == CandidateGrid().candidates_for(seed))
+
+    def test_the_sweep_composes_with_radius(self):
+        seed = SoftmaxWindow(exp_dim=10, anchor=2, anchor_side='max')
+        candidates = CandidateGrid(radius=1, exp_dims=(8, 10)).candidates_for(seed)
+        assert all(abs(w.anchor - seed.anchor) <= 1 for w in candidates)
+        assert {w.exp_dim for w in candidates} == {8, 10}
+
+    def test_a_window_size_below_one_is_rejected(self):
+        with pytest.raises(ValueError, match="exp_dims"):
+            CandidateGrid(exp_dims=(10, 0))
+
+    def test_the_search_can_choose_a_different_window_size(self):
+        harness = FakeHarness(exp_dim=10)
+        result = ProgressiveLayerSearch(
+            harness, budget=SearchBudget(noise_floor=0.0, patience=99),
+            grid=CandidateGrid(exp_dims=(8, 10, 12)),
+            progress=lambda _: None).run()
+        assert all(o.chosen.exp_dim in (8, 10, 12) for o in result.outcomes)
+
+
+class TestLockingCurve:
+    def test_the_curve_starts_at_the_measured_seed_and_covers_every_layer(self):
+        harness = FakeHarness()
+        result = search(harness).run()
+        curve = result.locking_curve()
+
+        assert len(curve) == harness.n_layers + 1
+        assert curve[0]['n_locked'] == 0
+        assert curve[0]['ppl'] == result.seed_ppl
+        assert [row['n_locked'] for row in curve] == list(range(harness.n_layers + 1))
+
+    def test_the_curve_never_goes_uphill(self):
+        result = search(FakeHarness()).run()
+        ppls = [row['ppl'] for row in result.locking_curve()]
+        assert ppls == sorted(ppls, reverse=True)
+
+    def test_the_curve_ends_at_the_final_perplexity(self):
+        result = search(FakeHarness()).run()
+        assert result.locking_curve()[-1]['ppl'] == pytest.approx(result.final_ppl)
+
+    def test_cumulative_evaluations_match_the_search_total(self):
+        result = search(FakeHarness()).run()
+        curve = result.locking_curve()
+        assert curve[-1]['cumulative_evals'] == sum(o.n_evals for o in result.outcomes)
+
+    def test_the_steps_sum_to_the_total_improvement(self):
+        result = search(FakeHarness()).run()
+        curve = result.locking_curve()
+        assert sum(row['step'] for row in curve) == pytest.approx(
+            curve[-1]['improvement_vs_seed'])
+
+    def test_the_curve_survives_a_layer_that_diverges(self):
+        harness = FakeHarness(nan_at={(1, 3, 'max')})
+        curve = search(harness).run().locking_curve()
+        assert len(curve) == harness.n_layers + 1
+        assert all(math.isfinite(row['ppl']) for row in curve)
+
+
 class TestReporting:
     def test_the_trace_covers_every_evaluated_candidate(self):
         harness = FakeHarness()

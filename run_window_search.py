@@ -38,6 +38,7 @@ def parse_args(argv=None):
 
     p.add_argument('--noise_floor', type=float, default=None)
     p.add_argument('--noise_summary', default=None)
+    p.add_argument('--noise_metric', choices=sorted(NOISE_METRICS), default='ci_width')
     p.add_argument('--profile_root', default=None)
     p.add_argument('--no_seed', action='store_true')
     p.add_argument('--max_evals', type=int, default=None)
@@ -45,6 +46,7 @@ def parse_args(argv=None):
     p.add_argument('--search_repeats', type=int, default=1)
     p.add_argument('--patience', type=int, default=3)
     p.add_argument('--radius', type=int, default=None)
+    p.add_argument('--exp_dims', default=None)
     p.add_argument('--time_budget_s', type=float, default=None)
     p.add_argument('--layers', default=None)
     p.add_argument('--assignment_out', default='output/window_search/assignment.yaml')
@@ -92,17 +94,58 @@ def parse_layers(spec, n_layers):
     return layers
 
 
+NOISE_METRICS = {
+    'ci_width': 'ppl_ci_width',
+    'ci_half_width': 'ppl_ci_width',
+    'spread': 'ppl_spread',
+    'stdev': 'ppl_stdev',
+}
+
+
+def parse_exp_dims(spec):
+    if not spec:
+        return None
+
+    dims = [int(chunk.strip()) for chunk in spec.split(',') if chunk.strip()]
+    bad = [d for d in dims if d < 1]
+    if bad:
+        raise ValueError(f"--exp_dims {spec!r} names window sizes {bad}; exp_dim is the "
+                         f"number of exponent bins the LUT covers and must be >= 1")
+    return tuple(dims) or None
+
+
 def resolve_noise_floor(args):
     if args.noise_floor is not None:
         return args.noise_floor, f"--noise_floor {args.noise_floor:g}"
 
     if args.noise_summary:
         summary = load_yaml(args.noise_summary)
-        spread = summary.get('ppl_spread')
-        if spread is None:
-            raise ValueError(f"{args.noise_summary} has no 'ppl_spread'; it does not look "
+        key = NOISE_METRICS[args.noise_metric]
+        value = summary.get(key)
+        if value is None:
+            raise ValueError(f"{args.noise_summary} has no {key!r}; it does not look "
                              f"like a summary written by --mode noise")
-        return float(spread), f"ppl_spread from {args.noise_summary}"
+
+        value = float(value)
+        if value != value:
+            raise SystemExit(
+                f"{key} in {args.noise_summary} is NaN. bootstrap_ci needs per-batch "
+                f"losses, and the host recorded none, so the floor cannot be measured. "
+                f"Re-run --mode noise with a build that populates batch_losses.")
+
+        if args.noise_metric == 'ci_half_width':
+            value /= 2.0
+
+        if value <= 0.0:
+            raise SystemExit(
+                f"{key} in {args.noise_summary} is {value:g}. A floor of zero means the "
+                f"acceptance rule degenerates to 'accept any improvement', which is how a "
+                f"search fits noise. Note that ppl_spread and ppl_stdev are structurally "
+                f"zero here: the eval is deterministic, so repeating it returns the same "
+                f"perplexity every time. Use --noise_metric ci_width (the default), which "
+                f"bootstraps the per-batch losses instead of repeating the eval.")
+
+        return value, f"{args.noise_metric} from {args.noise_summary}"
 
     raise SystemExit("--mode search needs a noise floor: pass --noise_floor, or "
                      "--noise_summary pointing at the *_summary.yaml that --mode noise "
@@ -209,6 +252,11 @@ def run_noise(args, harness, load_timing):
     print(f"ppl ci95          [{stats['ppl_ci_low']:.6f}, {stats['ppl_ci_high']:.6f}] "
           f"width {stats['ppl_ci_width']:.6g} "
           f"over {stats['bootstrap_n_batches']} batches")
+
+    if stats['ppl_spread'] == 0.0:
+        print("note: spread and stdev are exactly zero because the eval is "
+              "deterministic - same weights, same data, same order - so repeating it "
+              "cannot estimate noise. ci95 width is the floor --mode search consumes.")
     print(f"wall/eval median  {stats['wall_s_median']:.2f}s")
     print(f"apply/eval median {stats['apply_ms_median']:.2f}ms")
     print(f"tokens/eval       {stats['n_tokens']}")
@@ -238,8 +286,11 @@ def run_search(args, harness, load_timing):
     if noise_floor >= 0.007:
         print(f"warning: the per-layer gain reported in the paper is 0.23 PPL over 32 "
               f"layers, about 0.007 per layer. A noise floor of {noise_floor:.6g} is at "
-              f"or above that, so most layers will correctly refuse to move. Raise "
-              f"--search_repeats until the floor drops below it.", file=sys.stderr)
+              f"or above that, so most layers will correctly refuse to move. A bootstrap "
+              f"floor narrows with more evaluation data, not with more repeats of a "
+              f"deterministic eval: raise --n_samples, or use --noise_metric ci_half_width "
+              f"if the full 95% width is too conservative for the effect size.",
+              file=sys.stderr)
 
     seeder = None
     if args.profile_root and not args.no_seed:
@@ -260,10 +311,22 @@ def run_search(args, harness, load_timing):
                           repeats=args.search_repeats, noise_floor=noise_floor,
                           patience=args.patience, time_budget_s=args.time_budget_s)
 
+    grid = CandidateGrid(radius=args.radius, exp_dims=parse_exp_dims(args.exp_dims))
+    layers = parse_layers(args.layers, harness.n_layers)
+
+    per_layer = len(grid.candidates_for(harness.seed_attention))
+    print(f"candidate grid: {per_layer} windows per layer"
+          + (f", sweeping exp_dim over {list(grid.exp_dims)}" if grid.exp_dims
+             else ", exp_dim fixed at the seed"))
+    if grid.exp_dims and args.max_evals_per_layer is None:
+        print(f"warning: sweeping window size multiplies the grid by "
+              f"{len(grid.exp_dims)}; {per_layer} candidates x "
+              f"{len(layers) if layers else harness.n_layers} layers x "
+              f"{args.search_repeats} repeats is the worst case. Consider "
+              f"--max_evals_per_layer or --radius.", file=sys.stderr)
+
     search = ProgressiveLayerSearch(
-        harness, seeder=seeder, budget=budget,
-        grid=CandidateGrid(radius=args.radius),
-        layers=parse_layers(args.layers, harness.n_layers))
+        harness, seeder=seeder, budget=budget, grid=grid, layers=layers)
 
     result = search.run()
     result.load_s = load_timing.load_s

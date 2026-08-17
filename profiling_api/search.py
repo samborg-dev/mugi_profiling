@@ -34,6 +34,17 @@ class CandidateGrid:
     max_anchors: Tuple[int, ...] = DEFAULT_MAX_ANCHORS
     min_anchors: Tuple[int, ...] = DEFAULT_MIN_ANCHORS
     radius: Optional[int] = None
+    exp_dims: Optional[Tuple[int, ...]] = None
+
+    def __post_init__(self):
+        if self.exp_dims is None:
+            return
+
+        dims = tuple(int(d) for d in self.exp_dims)
+        bad = [d for d in dims if d < 1]
+        if bad:
+            raise ValueError(f"exp_dims must all be >= 1, got {bad}")
+        object.__setattr__(self, 'exp_dims', dims)
 
     def candidates_for(self, seed: SoftmaxWindow) -> Tuple[SoftmaxWindow, ...]:
         pairs = {(anchor, "max") for anchor in self.max_anchors}
@@ -45,13 +56,23 @@ class CandidateGrid:
                      if abs(p[0] - seed.anchor) <= self.radius
                      or p == (seed.anchor, seed.anchor_side)}
 
-        ordered = sorted(pairs, key=lambda p: (p != (seed.anchor, seed.anchor_side),
-                                               abs(p[0] - seed.anchor),
-                                               p[1] != seed.anchor_side,
-                                               p[0]))
-        return tuple(SoftmaxWindow(exp_dim=seed.exp_dim, anchor=anchor,
-                                   anchor_side=side, group_size=seed.group_size)
-                     for anchor, side in ordered)
+        dims = tuple(self.exp_dims or ()) + (seed.exp_dim,)
+        dims = tuple(dict.fromkeys(dims))
+
+        seed_key = (seed.anchor, seed.anchor_side, seed.exp_dim)
+        combos = {(anchor, side, dim) for (anchor, side) in pairs for dim in dims}
+        combos.add(seed_key)
+
+        ordered = sorted(combos, key=lambda c: (c != seed_key,
+                                                abs(c[0] - seed.anchor)
+                                                + abs(c[2] - seed.exp_dim),
+                                                abs(c[0] - seed.anchor),
+                                                c[1] != seed.anchor_side,
+                                                c[0],
+                                                c[2]))
+        return tuple(SoftmaxWindow(exp_dim=dim, anchor=anchor, anchor_side=side,
+                                   group_size=seed.group_size)
+                     for anchor, side, dim in ordered)
 
 
 @dataclass(frozen=True)
@@ -194,6 +215,11 @@ class SearchResult:
 
         layer_path = os.path.splitext(path)[0] + '_layers.csv'
         self.layer_dataframe().to_csv(layer_path, index=False)
+
+        curve_path = os.path.splitext(path)[0] + '_locking_curve.csv'
+        import pandas as pd
+
+        pd.DataFrame(self.locking_curve()).to_csv(curve_path, index=False)
         return path
 
     def savings_report(self, n_layers: int = None) -> dict:
@@ -239,13 +265,56 @@ class SearchResult:
             'stop_reasons': {o.layer: o.stop_reason.value for o in self.outcomes},
         }
 
+    def locking_curve(self) -> List[dict]:
+        start = self.seed_ppl
+        if start is None:
+            start = self.outcomes[0].seed_ppl if self.outcomes else float('nan')
+
+        rows = [{
+            'n_locked': 0,
+            'layer': None,
+            'ppl': start,
+            'improvement_vs_seed': 0.0,
+            'step': 0.0,
+            'changed': False,
+            'cumulative_evals': 0,
+            'cumulative_wall_s': 0.0,
+            'stop_reason': None,
+        }]
+
+        evals = 0
+        wall = 0.0
+        previous = start
+        for n, outcome in enumerate(self.outcomes, start=1):
+            evals += outcome.n_evals
+            wall += outcome.wall_s
+            ppl = outcome.best_ppl
+            step = (previous - ppl) if (math.isfinite(previous)
+                                        and math.isfinite(ppl)) else 0.0
+            rows.append({
+                'n_locked': n,
+                'layer': outcome.layer,
+                'ppl': ppl,
+                'improvement_vs_seed': (start - ppl) if (math.isfinite(start)
+                                                         and math.isfinite(ppl)) else 0.0,
+                'step': step,
+                'changed': outcome.changed,
+                'cumulative_evals': evals,
+                'cumulative_wall_s': wall,
+                'stop_reason': outcome.stop_reason.value,
+            })
+            previous = ppl
+
+        return rows
+
     def write_yaml(self, path: str) -> str:
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
         with open(path, 'w') as f:
             yaml.safe_dump({'summary': self.summary(),
                             'savings': self.savings_report(),
                             'seeds': seeds_to_rows(self.seeds),
-                            'layers': [o.to_row() for o in self.outcomes]},
+                            'layers': [o.to_row() for o in self.outcomes],
+                            'locking_curve': self.locking_curve()},
                            f, sort_keys=True)
         return path
 

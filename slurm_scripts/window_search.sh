@@ -22,6 +22,17 @@
 #     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
 #   MODE=replay EXPECT_PPL=4.5373336255593255 \
 #     sbatch --export=ALL slurm_scripts/window_search.sh
+#
+# The noise floor is a bootstrap CI over per-batch losses, so it narrows with
+# N_SAMPLES, not with REPEATS -- repeating a deterministic eval returns the same
+# perplexity every time. If the reported floor lands at or above 0.007 the search
+# will correctly refuse almost every layer; raise N_SAMPLES and measure again.
+#
+# EXP_DIMS sweeps the window size alongside the anchor. It multiplies the candidate
+# grid by the number of sizes, so pair it with MAX_EVALS_PER_LAYER or RADIUS:
+#   MODE=search EXP_DIMS=8,10,12 RADIUS=2 MAX_EVALS_PER_LAYER=12 \
+#     NOISE_SUMMARY=output/window_search/cost_and_noise_summary.yaml \
+#     sbatch --export=ALL --time=8:00:00 slurm_scripts/window_search.sh
 
 set -u
 
@@ -90,6 +101,8 @@ if [ "$MODE" = "search" ]; then
     [ -n "${RADIUS:-}" ] && ARGS+=(--radius "$RADIUS")
     [ -n "${TIME_BUDGET_S:-}" ] && ARGS+=(--time_budget_s "$TIME_BUDGET_S")
     [ -n "${LAYERS:-}" ] && ARGS+=(--layers "$LAYERS")
+    [ -n "${NOISE_METRIC:-}" ] && ARGS+=(--noise_metric "$NOISE_METRIC")
+    [ -n "${EXP_DIMS:-}" ] && ARGS+=(--exp_dims "$EXP_DIMS")
 
     python run_window_search.py "${COMMON[@]}" "${ARGS[@]}"
 elif [ "$MODE" = "replay" ]; then
