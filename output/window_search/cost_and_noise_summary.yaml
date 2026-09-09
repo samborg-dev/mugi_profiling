@@ -1,0 +1,46 @@
+apply_ms_median: 4.470826126635075
+assignment_digest: a2cdd56dd1dfd360
+baseline_ppl: 5.518405935203685
+bootstrap_n_batches: 32
+bootstrap_resamples: 10000
+input_hash: 7ae556ff31759191
+load:
+  device: cuda
+  load_batch_dataset_s: 0.00953211123123765
+  load_load_model_s: 23.242707630153745
+  load_load_streaming_dataset_s: 1.5869752729777247
+  load_process_dataset_s: 4.74993782909587
+  load_s: 38.10366275906563
+  load_set_profiling_dims_s: 1.8709106370806694e-05
+  load_total_s: 29.59128632606007
+  model_id: NousResearch/Llama-2-7b-hf
+  n_params: 6738415616
+n_tokens: 262144
+num_batches: 32
+ppl_ci_high: 7.379604223187086
+ppl_ci_low: 5.685313678361596
+ppl_ci_width: 1.6942905448254901
+ppl_mean: 6.494752079810249
+ppl_spread: 0.0
+ppl_stdev: 0.0
+projected_savings:
+  eval_s_median: 207.38857200206257
+  load_s: 38.10366275906563
+  n_evals: 512
+  n_layers: 32
+  reloading_s: 107402.26607334614
+  resident_s: 106221.0525278151
+  saved_s: 1181.2135455310345
+  speedup: 1.011120333657226
+provenance:
+  cuda: '12.8'
+  function_name: vlp
+  model: NousResearch/Llama-2-7b-hf
+  n_devices: 2
+  profiling: 'off'
+  python: 3.11.13
+  torch: 2.8.0+cu128
+  transformers: 4.56.1
+repeats: 5
+wall_s_median: 207.38857200206257
+wall_s_total: 1036.9013378049713
