@@ -1,0 +1,48 @@
+direction: down
+
+title: Three windows, only one is searched {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+lut: "LUT window — exp_dim entries" {
+  shape: class
+  set_by: "the search"
+  code: "max_exp / min_exp, one derived from the other"
+  swept: "8, 9, 10, 11, 12"
+  paper: "Figure 5, range [-6, 5]"
+}
+
+slide: "Slide window — 8 wide" {
+  shape: class
+  set_by: "nothing, hardcoded"
+  code: "mant_dim = 8"
+  hardware: "= VLP array width W"
+  placed: "per group, at that group's own max exponent"
+  paper: "Figure 5, range [-3, 4]"
+}
+
+group: "Group — window_size elements" {
+  shape: class
+  set_by: "config, 256 by default"
+  code: "window_size / group_size"
+  hardware: "= VLP array height H, 32-256"
+}
+
+runtime: "runtime placement, per group" { shape: hexagon }
+
+clamp_hi: "exponent above slide top\nsoftmax clamps to LUT max"
+clamp_lo: "exponent below slide bottom\nmantissa forced to 0"
+
+lut -> runtime: "bounds the slide"
+group -> runtime: "defines who shares a slide"
+slide -> runtime: "width of what is selected"
+runtime -> clamp_hi
+runtime -> clamp_lo
+
+note: "the search moves the LUT window;\nthe slide window moves itself at runtime" {
+  shape: text
+  style: { font-size: 20; italic: true }
+}
+runtime -> note { style.stroke-dash: 4 }

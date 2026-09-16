@@ -1,0 +1,43 @@
+direction: right
+
+title: Window search — inputs and outputs {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+inputs: "Input" {
+  model: "model_config/*.yaml" { shape: page }
+  nonlinear: "nonlinear_config/*.yaml" { shape: page }
+  parameter: "parameter_config/*.yaml" { shape: page }
+}
+
+config: "ProfileConfig.from_configs" { shape: hexagon }
+
+harness: "WindowEvalHarness" {
+  shape: class
+  setup: "eval mode, eager assert, hash batches, baseline, patch"
+  evaluate: "apply_assignment then run_inference"
+  reload: "weights load once, reset_lut per candidate"
+}
+
+search: "ProgressiveLayerSearch" { shape: hexagon }
+
+outputs: "Output" {
+  assignment: "assignment.yaml" { shape: page }
+  trace: "search_trace.csv" { shape: page }
+  curve: "search_trace_locking_curve.csv" { shape: page }
+  summary: "search_trace_summary.yaml" { shape: page }
+  cost: "cost_and_noise.csv" { shape: page }
+}
+
+inputs.model -> config
+inputs.nonlinear -> config: "the parameter space"
+inputs.parameter -> config
+config -> harness
+harness -> search
+search -> outputs.assignment: "the decision"
+search -> outputs.trace: "every candidate"
+search -> outputs.curve: "ppl vs layers locked"
+search -> outputs.summary: "run totals"
+harness -> outputs.cost: "per-eval timings"

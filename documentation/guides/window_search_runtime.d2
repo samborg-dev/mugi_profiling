@@ -1,0 +1,56 @@
+direction: right
+
+title: Window search — runtime integration {
+  near: top-center
+  shape: text
+  style: { font-size: 26; bold: true }
+}
+
+assignment: "assignment.yaml" {
+  shape: class
+  exp_dim: int
+  anchor: int
+  anchor_side: "max | min"
+  group_size: int
+}
+
+kwargs: "SoftmaxWindow.to_kwargs()" { shape: hexagon }
+
+runtime_cfg: "nonlinear_config.yaml" {
+  shape: class
+  exp_dim: int
+  max_exp: int
+  min_exp: int
+  window_size: int
+  lut_build: "max | min"
+}
+
+emitter: "create_nonlinear_config" {
+  shape: class
+  source: "exponent histograms"
+  emits: "layer_config: True"
+}
+
+reset: "VLPSoftmax.reset_lut" { shape: hexagon }
+build: "build_lut" { shape: hexagon }
+model: "patched model"
+
+inproc: "in-process path — implemented and tested" { shape: text; style.font-size: 20 }
+onfile: "file path — not written yet" { shape: text; style.font-size: 20 }
+
+assignment -> kwargs
+kwargs -> reset: "apply_assignment"
+reset -> build
+build -> model
+kwargs -> runtime_cfg: "same field set" { style.stroke-dash: 4 }
+emitter -> runtime_cfg: "already emits this shape"
+runtime_cfg -> reset
+
+kwargs -> inproc { style.stroke-dash: 4 }
+runtime_cfg -> onfile { style.stroke-dash: 4 }
+
+note: "identical field sets — to_kwargs() is tested\nby feeding it straight into reset_lut" {
+  shape: text
+  style: { font-size: 20; italic: true }
+}
+reset -> note { style.stroke-dash: 4 }
