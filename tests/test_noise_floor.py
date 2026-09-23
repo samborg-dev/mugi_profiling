@@ -21,6 +21,7 @@ class Args:
         self.noise_floor = None
         self.noise_summary = None
         self.noise_metric = 'ci_width'
+        self.paired = False
         self.__dict__.update(kwargs)
 
 
@@ -100,6 +101,20 @@ class TestResolveNoiseFloor:
     def test_no_floor_and_no_summary_is_fatal(self):
         with pytest.raises(SystemExit, match='needs a noise floor'):
             resolve_noise_floor(Args())
+
+    def test_paired_plus_noise_summary_is_a_hard_error(self, tmp_path):
+        path = write_summary(tmp_path, ppl_ci_width=1.694)
+        with pytest.raises(SystemExit, match='--paired needs --noise_floor'):
+            resolve_noise_floor(Args(paired=True, noise_summary=path))
+
+    def test_paired_with_explicit_zero_floor_is_allowed(self):
+        floor, source = resolve_noise_floor(Args(paired=True, noise_floor=0.0))
+        assert floor == 0.0
+        assert '--noise_floor' in source
+
+    def test_paired_without_noise_summary_falls_through_to_the_generic_error(self):
+        with pytest.raises(SystemExit, match='needs a noise floor'):
+            resolve_noise_floor(Args(paired=True))
 
 
 class TestParseExpDims:

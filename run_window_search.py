@@ -36,8 +36,20 @@ def parse_args(argv=None):
     p.add_argument('--no_baseline', action='store_true')
     p.add_argument('--out', default='output/window_search/cost_and_noise.csv')
 
-    p.add_argument('--noise_floor', type=float, default=None)
-    p.add_argument('--noise_summary', default=None)
+    p.add_argument('--noise_floor', type=float, default=None,
+                   help="Minimum PPL improvement a candidate must clear to be accepted. "
+                        "Unpaired: this is the whole significance test, compared against the "
+                        "raw PPL drop. Paired (--paired): the paired CI already tests "
+                        "significance; this is an optional *extra* minimum-effect-size margin "
+                        "in the same per-candidate difference units (order 0.01), and 0.0 is a "
+                        "legitimate value, not a degenerate one. Required explicitly when "
+                        "--paired is set - --noise_summary cannot supply it (see --noise_summary "
+                        "help).")
+    p.add_argument('--noise_summary', default=None,
+                   help="*_summary.yaml written by --mode noise. Supplies an *unpaired* "
+                        "bootstrap CI on absolute perplexity (order 1) - the wrong scale for "
+                        "--paired, which compares per-layer PPL differences (order 0.01). Not "
+                        "usable with --paired; pass --noise_floor explicitly there instead.")
     p.add_argument('--noise_metric', choices=sorted(NOISE_METRICS), default='ci_width')
     p.add_argument('--profile_root', default=None)
     p.add_argument('--no_seed', action='store_true')
@@ -120,6 +132,21 @@ def parse_exp_dims(spec):
 def resolve_noise_floor(args):
     if args.noise_floor is not None:
         return args.noise_floor, f"--noise_floor {args.noise_floor:g}"
+
+    paired = getattr(args, 'paired', False)
+
+    if paired and args.noise_summary:
+        raise SystemExit(
+            f"--paired needs --noise_floor, not --noise_summary {args.noise_summary!r}. "
+            f"--noise_summary/--noise_metric read the *_summary.yaml written by --mode noise, "
+            f"which measures an UNPAIRED bootstrap CI on absolute perplexity (order 1, e.g. "
+            f"the measured 1.694). --paired compares per-layer PPL DIFFERENCES instead (order "
+            f"0.01, e.g. the paper's 0.007-per-layer effect) - handing it the unpaired number "
+            f"means the acceptance gate can never fire. The paired path already tests "
+            f"statistical significance itself, via the paired CI on each candidate; "
+            f"--noise_floor under --paired is only an optional extra margin on top of that, in "
+            f"difference units. Pass --noise_floor explicitly - 0.0 is a legitimate value here, "
+            f"not a hack, because the paired CI is already doing the significance test.")
 
     if args.noise_summary:
         summary = load_yaml(args.noise_summary)
