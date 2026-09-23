@@ -1,0 +1,66 @@
+HF_TOKEN unset; using anonymous access.
+The configured model must be ungated and already cached under HF_HOME=/work/hdd/bebv/sborges/hf.
+python: /sw/rh9.4/user/python/conda-env/pytorch-2.8-cu128/bin/python
+mode=search repeats=5 n_samples=8
+NVIDIA H200, 143771 MiB
+NVIDIA H200, 143771 MiB
+model load: 45.2s total, 35.9s weights, 6.74B params on cuda
+baseline (unpatched) ppl: 3.896045
+noise floor: 0 (--noise_floor 0)
+acceptance: paired bootstrap, 95% CI over 2000 resamples; a candidate wins only if the whole interval clears 0
+candidate grid: 3 windows per layer, exp_dim fixed at the seed
+seeded 0/32 layers from histograms, 32 from fallback
+seed assignment ppl=4.731204
+layer   0: max+2 -> max+2  ppl=4.731204 gain=0.000000  evals=2 stop=exhausted
+layer   1: max+2 -> max+3  ppl=4.718313 gain=0.012890  evals=2 stop=exhausted
+layer   2: max+2 -> max+1  ppl=4.560263 gain=0.158051  evals=2 stop=exhausted
+layer   3: max+2 -> max+3  ppl=4.527873 gain=0.032390  evals=2 stop=exhausted
+layer   4: max+2 -> max+2  ppl=4.527873 gain=0.000000  evals=2 stop=exhausted
+layer   5: max+2 -> max+2  ppl=4.527873 gain=0.000000  evals=2 stop=exhausted
+layer   6: max+2 -> max+2  ppl=4.527873 gain=0.000000  evals=2 stop=exhausted
+layer   7: max+2 -> max+1  ppl=4.485254 gain=0.042619  evals=2 stop=exhausted
+layer   8: max+2 -> max+2  ppl=4.485254 gain=0.000000  evals=2 stop=exhausted
+layer   9: max+2 -> max+2  ppl=4.485254 gain=0.000000  evals=2 stop=exhausted
+layer  10: max+2 -> max+1  ppl=4.478498 gain=0.006756  evals=2 stop=exhausted
+layer  11: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  12: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  13: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  14: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  15: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  16: max+2 -> max+2  ppl=4.478498 gain=0.000000  evals=2 stop=exhausted
+layer  17: max+2 -> max+3  ppl=4.476034 gain=0.002464  evals=2 stop=exhausted
+layer  18: max+2 -> max+2  ppl=4.476034 gain=0.000000  evals=2 stop=exhausted
+layer  19: max+2 -> max+2  ppl=4.476034 gain=0.000000  evals=2 stop=exhausted
+layer  20: max+2 -> max+2  ppl=4.476034 gain=0.000000  evals=2 stop=exhausted
+layer  21: max+2 -> max+2  ppl=4.476034 gain=0.000000  evals=2 stop=exhausted
+layer  22: max+2 -> max+2  ppl=4.476034 gain=0.000000  evals=2 stop=exhausted
+layer  23: max+2 -> max+3  ppl=4.474851 gain=0.001183  evals=2 stop=exhausted
+layer  24: max+2 -> max+2  ppl=4.474851 gain=0.000000  evals=2 stop=exhausted
+layer  25: max+2 -> max+2  ppl=4.474851 gain=0.000000  evals=2 stop=exhausted
+layer  26: max+2 -> max+2  ppl=4.474851 gain=0.000000  evals=2 stop=exhausted
+layer  27: max+2 -> max+2  ppl=4.474851 gain=0.000000  evals=2 stop=exhausted
+layer  28: max+2 -> max+2  ppl=4.474851 gain=0.000000  evals=2 stop=exhausted
+layer  29: max+2 -> max+3  ppl=4.473949 gain=0.000902  evals=2 stop=exhausted
+layer  30: max+2 -> max+2  ppl=4.473949 gain=0.000000  evals=2 stop=exhausted
+layer  31: max+2 -> max+2  ppl=4.473949 gain=0.000000  evals=1 stop=time_exhausted
+
+baseline (unpatched)  3.896045
+seed assignment       4.731204
+per-layer search      4.473949
+improvement           0.257255 over 8/32 layers
+evaluations           65
+wall                  28.3 min
+
+reload cost (Dr. Wu 8/03: 'every time loading versus no loading')
+  model load           45.2s
+  eval (median)        25.98s
+  reload per layer     32 x load + 65 x eval = 52.3 min
+  model resident       1 x load + 65 x eval = 28.9 min
+  saved                23.4 min (1.8x)
+  lower bound: charges nothing for Slurm queue wait or for editing the YAML by hand between jobs
+
+wrote             /u/sborges/mugi_profiling/output/window_search/search_trace_paired-full32-v2.csv
+wrote             /u/sborges/mugi_profiling/output/window_search/assignment_paired-full32-v2.yaml
+wrote             /u/sborges/mugi_profiling/output/window_search/search_trace_paired-full32-v2_summary.yaml
+wrote             /u/sborges/mugi_profiling/output/window_search/cost_and_noise_paired-full32-v2.csv
+exit code: 0
