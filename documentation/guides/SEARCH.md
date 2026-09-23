@@ -131,25 +131,62 @@ evaluation is **207.4 s**.
 ## 6. Keeping or Rejecting a Candidate
 
 After each evaluation the search decides whether the candidate replaces the window it is
-currently holding:
+currently holding. There are two acceptance rules, and they answer different questions.
+
+**Unpaired (default).** The candidate wins if it beats the incumbent by more than
+`--noise_floor`:
 
 ```python
 return (incumbent - score) > self.budget.noise_floor, None
 ```
 
-The candidate wins if it beats the incumbent by more than `--noise_floor`. A candidate whose
-perplexity is not finite is rejected outright.
+Here `--noise_floor` has to carry the *entire* significance test, because this rule has no
+notion of how uncertain either score is. A floor measured this way — a bootstrap CI width on
+one candidate's absolute perplexity — comes out large (order 1) relative to the ~0.007
+per-layer effect the paper reports (§1), because it's dominated by which batches of text got
+drawn, not by which window is better.
 
-**`--mode search` requires this value.** There is no default — omit it and the run exits
-before loading the model:
+**Paired (`--paired`).** Every candidate in a layer is scored on the same batches as the
+incumbent, so the comparison can bootstrap the batch-by-batch *differences* instead of one
+candidate's absolute score. The shared "some text is harder" noise cancels out of a
+difference, leaving an interval tight enough to resolve the real effect size:
+
+```python
+ci = paired_ppl_ci(incumbent_losses, candidate_losses, ...)
+return ci[0] > self.budget.noise_floor, ci
+```
+
+The candidate wins only if the *entire* confidence interval on the difference clears the
+floor — the improvement has to be statistically significant, not just numerically lower.
+Under `--paired`, `--noise_floor` is on the difference scale (order 0.01, not order 1) and is
+an optional *extra* margin on top of the significance test the paired interval already
+performs — `--noise_floor 0` is a legitimate value here, not a degenerate one, because the
+interval itself is doing the real work.
+
+**The two floors are not interchangeable, and this is enforced.** `--noise_summary` points at
+a `_summary.yaml` written by `--mode noise`, which measures the *unpaired* CI — the wrong
+scale for `--paired`. Passing both together is a hard error:
+
+```
+--paired needs --noise_floor, not --noise_summary '...'. --noise_summary/--noise_metric read
+the *_summary.yaml written by --mode noise, which measures an UNPAIRED bootstrap CI on
+absolute perplexity (order 1) ... --paired compares per-layer PPL DIFFERENCES instead
+(order 0.01) ...
+```
+
+Under `--paired`, pass `--noise_floor` explicitly.
+
+**`--mode search` requires a floor one way or another.** There is no default — omit both
+flags and the run exits before loading the model:
 
 ```
 --mode search needs a noise floor: pass --noise_floor, ...
 ```
 
-Passing `--noise_floor 0` makes the rule "accept any improvement at all." That is the
-loosest setting available and means a candidate scoring lower by any margin, however small,
-will be kept.
+Passing `--noise_floor 0` under the *unpaired* rule makes it "accept any improvement at
+all" — the loosest setting available, and generally not what you want, since it can't tell a
+real improvement from noise. The same value under `--paired` means something different and
+safer: see above.
 
 ---
 

@@ -141,7 +141,7 @@ One row per candidate evaluated, including the rejected ones:
 | `ppl`, `ppl_repeats` | the score, and each repeat if `--search_repeats > 1` |
 | `accepted` | whether it replaced the incumbent |
 | `delta_vs_incumbent` | previous score minus this score |
-| `paired_ci_low`, `paired_ci_high` | reserved for an alternate acceptance mode; empty by default |
+| `paired_ci_low`, `paired_ci_high` | bounds of the paired-difference CI under `--paired`; empty under the default (unpaired) rule. See [The Search §6](SEARCH.md#6-keeping-or-rejecting-a-candidate) |
 | `assignment_hash` | the digest of the full assignment at that point |
 | `wall_s`, `apply_ms` | evaluation time, and time spent in `reset_lut` |
 
