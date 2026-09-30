@@ -11,7 +11,7 @@
 set -u
 source "$HOME/mugi_profiling/original_pipeline/env.sh"
 cd "$HOME/mugi_newton"
-export PYTHONPATH="$HOME/mugi_newton"
+export PYTHONPATH="$HOME/mugi_newton:$PYTHONPATH"
 
 LIMIT_S="${LIMIT_S:-1800}"
 SAFETY_S="${SAFETY_S:-120}"

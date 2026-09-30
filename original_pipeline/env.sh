@@ -5,6 +5,7 @@ mkdir -p "$WORK/runs"
 
 unset PYTHONPATH
 module load pytorch-conda/2.8 || { echo "pytorch-conda/2.8 not available"; exit 1; }
+export PYTHONPATH="$ORIG/import_stubs${PYTHONPATH:+:$PYTHONPATH}"
 export HF_HOME="${HF_HOME:-/work/hdd/bebv/$USER/hf}"
 
 [ -f "$TIMES" ] || echo "pipeline,job_id,unit,start,loop_start,end,rc,gpus" > "$TIMES"
