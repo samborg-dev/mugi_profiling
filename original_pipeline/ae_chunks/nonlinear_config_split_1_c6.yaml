@@ -1,0 +1,8 @@
+functions:
+  taylor:
+    attention: [softmax]
+params:
+  taylor:
+    attention:
+      degree_center: [-4, -3, -2, -1, 0]
+      degrees: [6, 7, 8, 9, 10]

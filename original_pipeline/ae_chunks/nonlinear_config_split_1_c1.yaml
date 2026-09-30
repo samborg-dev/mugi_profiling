@@ -1,0 +1,5 @@
+functions:
+  torch:
+    attention: [softmax]
+    ffn: [silu, gelu, fast_gelu]
+params: {}

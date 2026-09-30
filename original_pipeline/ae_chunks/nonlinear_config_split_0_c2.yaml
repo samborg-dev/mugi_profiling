@@ -1,0 +1,11 @@
+functions:
+  vlp:
+    ffn: [silu, gelu, fast_gelu]
+params:
+  vlp:
+    ffn:
+      exp_dim: [8, 9, 10, 11, 12]
+      max_pos_exp: [-2, -1, 0, 1, 2, 3, 4]
+      min_pos_exp: [-4]
+      window_size: [256]
+      lut_build: [max]
