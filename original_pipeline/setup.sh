@@ -16,6 +16,14 @@ for clone in mugi_ae mugi_newton; do
     sed -i 's#meta-llama/Llama-2-7b-hf#NousResearch/Llama-2-7b-hf#' \
         "$HOME/$clone/config/model_config/llama/llama_2_7b.yaml"
 done
+
+snaps=("${HF_HOME:-/work/hdd/bebv/$USER/hf}"/hub/models--NousResearch--Llama-2-7b-hf/snapshots/*/)
+[ "${#snaps[@]}" -eq 1 ] && [ -d "${snaps[0]}" ] || { echo "expected one cached NousResearch/Llama-2-7b-hf snapshot, found: ${snaps[*]}"; exit 1; }
+mkdir -p "$HOME/mugi_ae/weights"
+ln -sfn "${snaps[0]}" "$HOME/mugi_ae/weights/llama-2-7b-hf"
+sed -i 's#name: NousResearch/Llama-2-7b-hf#name: weights/llama-2-7b-hf#' \
+    "$HOME/mugi_ae/config/model_config/llama/llama_2_7b.yaml"
+
 sed -i 's/^n_samples: .*/n_samples: 8/' \
     "$HOME/mugi_ae/config/parameter_config/parameter_config.yaml" \
     "$HOME/mugi_ae/config/parameter_config/end_to_end_config.yaml" \
@@ -31,3 +39,4 @@ grep -H "n_samples" "$HOME/mugi_ae/config/parameter_config/parameter_config.yaml
     "$HOME/mugi_ae/config/parameter_config/end_to_end_config.yaml" \
     "$HOME/mugi_newton/config/parameter_config/parameter_config.yaml"
 ls "$HOME/mugi_ae/config/chunks"
+ls -l "$HOME/mugi_ae/weights/llama-2-7b-hf"

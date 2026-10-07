@@ -4,7 +4,7 @@ import sys
 
 import pandas as pd
 
-MODEL = 'NousResearch/Llama-2-7b-hf'
+MODEL = 'weights/llama-2-7b-hf'
 EXPECT = {
     '0': {'c1': 35, 'c2': 35, 'c3': 27, 'c4': 27, 'c5': 27, 'c6': 28},
     '1': {'c1': 1, 'c2': 25, 'c3': 22, 'c4': 33, 'c5': 25, 'c6': 25},

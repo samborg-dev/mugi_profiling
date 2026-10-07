@@ -7,7 +7,7 @@ import yaml
 
 HOME = os.path.expanduser('~')
 WORK = os.path.join(HOME, 'orig_compare')
-AE = os.path.join(HOME, 'mugi_ae', 'csv', 'NousResearch', 'Llama-2-7b-hf')
+AE = os.path.join(HOME, 'mugi_ae', 'csv', 'weights', 'llama-2-7b-hf')
 NEWTON = os.path.join(HOME, 'mugi_newton')
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -106,11 +106,24 @@ def efficiency():
     return out
 
 
+def unpatched_warnings(ae):
+    base = ae.get('baseline')
+    if base is None:
+        return []
+    out = []
+    for key, value in ae.items():
+        ppl = value['ppl'] if isinstance(value, dict) else value
+        if key != 'baseline' and ppl == base:
+            out.append(f'{key} equals the unpatched baseline exactly; its approximation was not applied')
+    return out
+
+
 def main():
     ae = ae_perplexity()
     nw, layers = newton_perplexity()
     eff = efficiency()
-    report = {'artifact': ae, 'newton': nw, 'newton_layers': layers, 'efficiency': eff}
+    report = {'warnings': unpatched_warnings(ae), 'artifact': ae, 'newton': nw,
+              'newton_layers': layers, 'efficiency': eff}
     with open(os.path.join(WORK, 'summary.yaml'), 'w') as f:
         yaml.safe_dump(report, f, sort_keys=False)
     print(yaml.safe_dump(report, sort_keys=False, default_flow_style=None))
