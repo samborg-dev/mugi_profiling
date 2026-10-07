@@ -1,0 +1,9 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:36<00:36, 36.28s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:52<00:00, 24.53s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:52<00:00, 26.29s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing torch combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+Processing torch combinations: 100%|██████████| 1/1 [00:03<00:00,  3.15s/it][AProcessing torch combinations: 100%|██████████| 1/1 [00:03<00:00,  3.15s/it]
+Patching configurations: 100%|██████████| 1/1 [00:03<00:00,  3.15s/it]Patching configurations: 100%|██████████| 1/1 [00:03<00:00,  3.15s/it]

@@ -1,0 +1,4 @@
+model,modality,value,function_name,patch_attention,patch_ffn,attn_fn,ffn_fn,attn_exp_dim,attn_max_exp,attn_min_exp,attn_window_size,attn_lut_build,ffn_exp_dim,ffn_max_pos_exp,ffn_min_pos_exp,ffn_window_size,ffn_lut_build,attn_segments,attn_segment_0,ffn_segments,ffn_segment_0,attn_degree_center,attn_degrees
+NousResearch/Llama-2-7b-hf,nlp,3.896045661273612,vlp,True,True,VLPSoftmax,VLPSilu,8.0,-2.0,4.0,256.0,max,8.0,-2.0,-4.0,256.0,max,,,,,,
+NousResearch/Llama-2-7b-hf,nlp,3.896045661273612,pwl,True,True,PWLSoftmax,PWLSilu,,,,,,,,,,,20.0,-16.0,20.0,3.0,,
+NousResearch/Llama-2-7b-hf,nlp,3.896045661273612,taylor,True,False,TaylorSoftmax,CustomSilu,,,,,,,,,,,,,,,-9.0,6.0

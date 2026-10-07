@@ -1,0 +1,11 @@
+python 3.11.13 torch 2.8.0+cu128 transformers 4.56.1
+NVIDIA H200, 143771 MiB
+NVIDIA H200, 143771 MiB
+merged split_0: 179 rows -> csv/NousResearch/Llama-2-7b-hf/nonlinear_config_split_0/metric.csv
+merged split_1: 131 rows -> csv/NousResearch/Llama-2-7b-hf/nonlinear_config_split_1/metric.csv
+1790739167 Loading model
+1790739173 Loading dataset
+1790739174 Processing dataset
+1790739175 Batching dataset
+1790739175 Looping through configurations
+1790739183 Saving results

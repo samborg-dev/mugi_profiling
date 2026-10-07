@@ -1,0 +1,85 @@
+=====================================================
+Conda-Forge PyTorch 2.8 Environment Loaded Successfully!
+=====================================================
+
+To activate the environment:
+  conda activate base
+
+If 'conda activate' fails, use:
+  source $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate base
+
+To verify PyTorch installation:
+  python -c "import torch; print(f'PyTorch {torch.__version__} CUDA:
+{torch.cuda.is_available()}')"
+
+Environment includes:
+  - PyTorch 2.8 with CUDA 12.8 support
+  - Scientific Python stack (numpy, scipy, pandas)
+  - ML libraries (transformers, lightning, timm)
+  - Cray PE integration with optimized MPI
+
+For Jupyter notebook support:
+  setup-kernel (creates Jupyter kernel for this environment)
+
+For distributed training, load:
+  module load aws-ofi-nccl/1.14.2
+
+Ready for single-node and distributed training!
+=====================================================
+
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.68s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.29s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.50s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing vlp combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+
+FFN combinations:   0%|          | 0/22 [00:00<?, ?it/s][A[A
+
+FFN combinations:   5%|▍         | 1/22 [00:02<01:00,  2.87s/it][A[A
+
+FFN combinations:   9%|▉         | 2/22 [00:05<00:55,  2.77s/it][A[A
+
+FFN combinations:  14%|█▎        | 3/22 [00:08<00:51,  2.70s/it][A[A
+
+FFN combinations:  18%|█▊        | 4/22 [00:10<00:47,  2.65s/it][A[A
+
+FFN combinations:  23%|██▎       | 5/22 [00:13<00:44,  2.63s/it][A[A
+
+FFN combinations:  27%|██▋       | 6/22 [00:15<00:41,  2.62s/it][A[A
+
+FFN combinations:  32%|███▏      | 7/22 [00:18<00:39,  2.60s/it][A[A
+
+FFN combinations:  36%|███▋      | 8/22 [00:21<00:36,  2.60s/it][A[A
+
+FFN combinations:  41%|████      | 9/22 [00:23<00:33,  2.60s/it][A[A
+
+FFN combinations:  45%|████▌     | 10/22 [00:26<00:31,  2.61s/it][A[A
+
+FFN combinations:  50%|█████     | 11/22 [00:28<00:28,  2.61s/it][A[A
+
+FFN combinations:  55%|█████▍    | 12/22 [00:31<00:26,  2.61s/it][A[A
+
+FFN combinations:  59%|█████▉    | 13/22 [00:34<00:23,  2.61s/it][A[A
+
+FFN combinations:  64%|██████▎   | 14/22 [00:36<00:20,  2.62s/it][A[A
+
+FFN combinations:  68%|██████▊   | 15/22 [00:39<00:18,  2.61s/it][A[A
+
+FFN combinations:  73%|███████▎  | 16/22 [00:41<00:15,  2.60s/it][A[A
+
+FFN combinations:  77%|███████▋  | 17/22 [00:44<00:12,  2.60s/it][A[A
+
+FFN combinations:  82%|████████▏ | 18/22 [00:47<00:10,  2.61s/it][A[A
+
+FFN combinations:  86%|████████▋ | 19/22 [00:49<00:07,  2.62s/it][A[A
+
+FFN combinations:  91%|█████████ | 20/22 [00:52<00:05,  2.61s/it][A[A
+
+FFN combinations:  95%|█████████▌| 21/22 [00:55<00:02,  2.61s/it][A[A
+
+FFN combinations: 100%|██████████| 22/22 [00:57<00:00,  2.60s/it][A[AFFN combinations: 100%|██████████| 22/22 [00:57<00:00,  2.62s/it]
+
+Processing vlp combinations: 100%|██████████| 1/1 [00:57<00:00, 57.65s/it][AProcessing vlp combinations: 100%|██████████| 1/1 [00:57<00:00, 57.65s/it]
+Patching configurations: 100%|██████████| 1/1 [00:57<00:00, 57.65s/it]Patching configurations: 100%|██████████| 1/1 [00:57<00:00, 57.65s/it]

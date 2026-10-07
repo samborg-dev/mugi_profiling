@@ -1,0 +1,10 @@
+python 3.11.13 torch 2.8.0+cu128 transformers 4.56.1
+NVIDIA H200, 143771 MiB
+NVIDIA H200, 143771 MiB
+chunk split_1_c1
+1790738314 Loading model
+1790738369 Loading dataset
+1790738371 Processing dataset
+1790738372 Batching dataset
+1790738372 Looping through configurations
+1790738375 Saving results

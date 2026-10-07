@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/u/sborges/mugi_ae/model_script.py", line 8, in <module>
+    from inference_classes.audio_inference import AudioModel
+  File "/u/sborges/mugi_ae/inference_classes/audio_inference.py", line 2, in <module>
+    import librosa
+ModuleNotFoundError: No module named 'librosa'

@@ -1,0 +1,414 @@
+=====================================================
+Conda-Forge PyTorch 2.8 Environment Loaded Successfully!
+=====================================================
+
+To activate the environment:
+  conda activate base
+
+If 'conda activate' fails, use:
+  source $CONDA_PREFIX/etc/profile.d/conda.sh && conda activate base
+
+To verify PyTorch installation:
+  python -c "import torch; print(f'PyTorch {torch.__version__} CUDA:
+{torch.cuda.is_available()}')"
+
+Environment includes:
+  - PyTorch 2.8 with CUDA 12.8 support
+  - Scientific Python stack (numpy, scipy, pandas)
+  - ML libraries (transformers, lightning, timm)
+  - Cray PE integration with optimized MPI
+
+For Jupyter notebook support:
+  setup-kernel (creates Jupyter kernel for this environment)
+
+For distributed training, load:
+  module load aws-ofi-nccl/1.14.2
+
+Ready for single-node and distributed training!
+=====================================================
+
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.69s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:57<00:00, 33.15s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:57<00:00, 28.73s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.90s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.90s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.94s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.76s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.70s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.67s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.68s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.68s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.67s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.68s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.69s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.69s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.67s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.42s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.72s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.98s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.87s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.73s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.69s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.64s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.66s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.95s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.43s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.66s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.87s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.73s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.69s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.67s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.64s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.67s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.81s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.81s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.69s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.69s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.70s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.69s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.66s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.78s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00, 10.27s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:18<00:00,  9.29s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.87s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.88s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.73s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.67s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.67s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.70s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.68s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:35, 11.67s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.67s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.64s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.72s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.25s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.47s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.86s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.86s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.87s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.73s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.68s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.66s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.62s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.66s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.24s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.45s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.92s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.92s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.92s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.76s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.71s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.71s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.74s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.70s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:35, 11.68s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.69s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.62s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.62s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.64s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.64s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:04<00:04,  4.08s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.49s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:05<00:00,  2.73s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.93s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.93s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:23, 11.93s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:10, 11.76s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  38%|███▊      | 3/8 [00:35<00:58, 11.70s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.68s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:10<00:23, 11.66s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.65s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.68s/it]
+Running configurations:   0%|          | 0/8 [00:00<?, ?it/s]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.65s/it]
+Running configurations:  12%|█▎        | 1/8 [00:11<01:21, 11.65s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.62s/it]
+Running configurations:  25%|██▌       | 2/8 [00:23<01:09, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  38%|███▊      | 3/8 [00:34<00:58, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  50%|█████     | 4/8 [00:46<00:46, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  62%|██████▎   | 5/8 [00:58<00:34, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.64s/it]
+Running configurations:  75%|███████▌  | 6/8 [01:09<00:23, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations:  88%|████████▊ | 7/8 [01:21<00:11, 11.63s/it]
+Batched Inference:   0%|          | 0/1 [00:00<?, ?it/s][A
+Batched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it][ABatched Inference: 100%|██████████| 1/1 [00:11<00:00, 11.63s/it]
+Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]Running configurations: 100%|██████████| 8/8 [01:33<00:00, 11.63s/it]

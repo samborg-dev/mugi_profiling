@@ -1,0 +1,82 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:03<00:03,  3.57s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.20s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:04<00:00,  2.41s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing vlp combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+
+Attention combinations:   0%|          | 0/35 [00:00<?, ?it/s][A[A
+
+Attention combinations:   3%|▎         | 1/35 [00:02<01:37,  2.87s/it][A[A
+
+Attention combinations:   6%|▌         | 2/35 [00:05<01:30,  2.73s/it][A[A
+
+Attention combinations:   9%|▊         | 3/35 [00:08<01:25,  2.67s/it][A[A
+
+Attention combinations:  11%|█▏        | 4/35 [00:10<01:21,  2.64s/it][A[A
+
+Attention combinations:  14%|█▍        | 5/35 [00:13<01:18,  2.63s/it][A[A
+
+Attention combinations:  17%|█▋        | 6/35 [00:15<01:15,  2.62s/it][A[A
+
+Attention combinations:  20%|██        | 7/35 [00:18<01:13,  2.61s/it][A[A
+
+Attention combinations:  23%|██▎       | 8/35 [00:21<01:10,  2.62s/it][A[A
+
+Attention combinations:  26%|██▌       | 9/35 [00:23<01:07,  2.61s/it][A[A
+
+Attention combinations:  29%|██▊       | 10/35 [00:26<01:05,  2.61s/it][A[A
+
+Attention combinations:  31%|███▏      | 11/35 [00:28<01:02,  2.61s/it][A[A
+
+Attention combinations:  34%|███▍      | 12/35 [00:31<00:59,  2.60s/it][A[A
+
+Attention combinations:  37%|███▋      | 13/35 [00:34<00:57,  2.61s/it][A[A
+
+Attention combinations:  40%|████      | 14/35 [00:36<00:54,  2.61s/it][A[A
+
+Attention combinations:  43%|████▎     | 15/35 [00:39<00:52,  2.61s/it][A[A
+
+Attention combinations:  46%|████▌     | 16/35 [00:41<00:49,  2.60s/it][A[A
+
+Attention combinations:  49%|████▊     | 17/35 [00:44<00:46,  2.60s/it][A[A
+
+Attention combinations:  51%|█████▏    | 18/35 [00:47<00:44,  2.59s/it][A[A
+
+Attention combinations:  54%|█████▍    | 19/35 [00:49<00:41,  2.59s/it][A[A
+
+Attention combinations:  57%|█████▋    | 20/35 [00:52<00:38,  2.59s/it][A[A
+
+Attention combinations:  60%|██████    | 21/35 [00:54<00:36,  2.59s/it][A[A
+
+Attention combinations:  63%|██████▎   | 22/35 [00:57<00:33,  2.58s/it][A[A
+
+Attention combinations:  66%|██████▌   | 23/35 [01:00<00:31,  2.59s/it][A[A
+
+Attention combinations:  69%|██████▊   | 24/35 [01:02<00:28,  2.59s/it][A[A
+
+Attention combinations:  71%|███████▏  | 25/35 [01:05<00:25,  2.58s/it][A[A
+
+Attention combinations:  74%|███████▍  | 26/35 [01:07<00:23,  2.58s/it][A[A
+
+Attention combinations:  77%|███████▋  | 27/35 [01:10<00:20,  2.57s/it][A[A
+
+Attention combinations:  80%|████████  | 28/35 [01:12<00:17,  2.57s/it][A[A
+
+Attention combinations:  83%|████████▎ | 29/35 [01:15<00:15,  2.56s/it][A[A
+
+Attention combinations:  86%|████████▌ | 30/35 [01:18<00:12,  2.56s/it][A[A
+
+Attention combinations:  89%|████████▊ | 31/35 [01:20<00:10,  2.58s/it][A[A
+
+Attention combinations:  91%|█████████▏| 32/35 [01:23<00:07,  2.57s/it][A[A
+
+Attention combinations:  94%|█████████▍| 33/35 [01:25<00:05,  2.57s/it][A[A
+
+Attention combinations:  97%|█████████▋| 34/35 [01:28<00:02,  2.57s/it][A[A
+
+Attention combinations: 100%|██████████| 35/35 [01:30<00:00,  2.57s/it][A[AAttention combinations: 100%|██████████| 35/35 [01:30<00:00,  2.60s/it]
+
+Processing vlp combinations: 100%|██████████| 1/1 [01:30<00:00, 90.93s/it][AProcessing vlp combinations: 100%|██████████| 1/1 [01:30<00:00, 90.93s/it]
+Patching configurations: 100%|██████████| 1/1 [01:30<00:00, 90.93s/it]Patching configurations: 100%|██████████| 1/1 [01:30<00:00, 90.93s/it]

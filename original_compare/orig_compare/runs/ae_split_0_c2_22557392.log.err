@@ -1,0 +1,82 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [05:38<05:38, 338.01s/it]Loading checkpoint shards: 100%|██████████| 2/2 [06:48<00:00, 180.53s/it]Loading checkpoint shards: 100%|██████████| 2/2 [06:48<00:00, 204.16s/it]
+`trust_remote_code` is not supported anymore.
+Please check that the Hugging Face dataset 'allenai/c4' isn't based on a loading script and remove `trust_remote_code`.
+If the dataset is based on a loading script, please ask the dataset author to remove it and convert it to a standard format like Parquet.
+Patching configurations:   0%|          | 0/1 [00:00<?, ?it/s]
+Processing vlp combinations:   0%|          | 0/1 [00:00<?, ?it/s][A
+
+FFN combinations:   0%|          | 0/35 [00:00<?, ?it/s][A[A
+
+FFN combinations:   3%|▎         | 1/35 [00:03<01:55,  3.40s/it][A[A
+
+FFN combinations:   6%|▌         | 2/35 [00:05<01:35,  2.89s/it][A[A
+
+FFN combinations:   9%|▊         | 3/35 [00:08<01:27,  2.73s/it][A[A
+
+FFN combinations:  11%|█▏        | 4/35 [00:11<01:22,  2.65s/it][A[A
+
+FFN combinations:  14%|█▍        | 5/35 [00:13<01:17,  2.60s/it][A[A
+
+FFN combinations:  17%|█▋        | 6/35 [00:16<01:14,  2.56s/it][A[A
+
+FFN combinations:  20%|██        | 7/35 [00:18<01:11,  2.55s/it][A[A
+
+FFN combinations:  23%|██▎       | 8/35 [00:21<01:08,  2.53s/it][A[A
+
+FFN combinations:  26%|██▌       | 9/35 [00:23<01:05,  2.52s/it][A[A
+
+FFN combinations:  29%|██▊       | 10/35 [00:26<01:02,  2.52s/it][A[A
+
+FFN combinations:  31%|███▏      | 11/35 [00:28<01:00,  2.51s/it][A[A
+
+FFN combinations:  34%|███▍      | 12/35 [00:31<00:57,  2.51s/it][A[A
+
+FFN combinations:  37%|███▋      | 13/35 [00:33<00:55,  2.51s/it][A[A
+
+FFN combinations:  40%|████      | 14/35 [00:36<00:52,  2.51s/it][A[A
+
+FFN combinations:  43%|████▎     | 15/35 [00:38<00:50,  2.51s/it][A[A
+
+FFN combinations:  46%|████▌     | 16/35 [00:41<00:47,  2.51s/it][A[A
+
+FFN combinations:  49%|████▊     | 17/35 [00:43<00:45,  2.51s/it][A[A
+
+FFN combinations:  51%|█████▏    | 18/35 [00:46<00:42,  2.51s/it][A[A
+
+FFN combinations:  54%|█████▍    | 19/35 [00:48<00:40,  2.51s/it][A[A
+
+FFN combinations:  57%|█████▋    | 20/35 [00:51<00:37,  2.51s/it][A[A
+
+FFN combinations:  60%|██████    | 21/35 [00:53<00:35,  2.51s/it][A[A
+
+FFN combinations:  63%|██████▎   | 22/35 [00:56<00:32,  2.51s/it][A[A
+
+FFN combinations:  66%|██████▌   | 23/35 [00:58<00:30,  2.50s/it][A[A
+
+FFN combinations:  69%|██████▊   | 24/35 [01:01<00:27,  2.50s/it][A[A
+
+FFN combinations:  71%|███████▏  | 25/35 [01:03<00:25,  2.50s/it][A[A
+
+FFN combinations:  74%|███████▍  | 26/35 [01:06<00:22,  2.50s/it][A[A
+
+FFN combinations:  77%|███████▋  | 27/35 [01:08<00:20,  2.51s/it][A[A
+
+FFN combinations:  80%|████████  | 28/35 [01:11<00:17,  2.51s/it][A[A
+
+FFN combinations:  83%|████████▎ | 29/35 [01:13<00:15,  2.52s/it][A[A
+
+FFN combinations:  86%|████████▌ | 30/35 [01:16<00:12,  2.52s/it][A[A
+
+FFN combinations:  89%|████████▊ | 31/35 [01:18<00:10,  2.51s/it][A[A
+
+FFN combinations:  91%|█████████▏| 32/35 [01:21<00:07,  2.51s/it][A[A
+
+FFN combinations:  94%|█████████▍| 33/35 [01:23<00:05,  2.51s/it][A[A
+
+FFN combinations:  97%|█████████▋| 34/35 [01:26<00:02,  2.53s/it][A[A
+
+FFN combinations: 100%|██████████| 35/35 [01:28<00:00,  2.53s/it][A[AFFN combinations: 100%|██████████| 35/35 [01:28<00:00,  2.54s/it]
+
+Processing vlp combinations: 100%|██████████| 1/1 [01:28<00:00, 88.90s/it][AProcessing vlp combinations: 100%|██████████| 1/1 [01:28<00:00, 88.90s/it]
+Patching configurations: 100%|██████████| 1/1 [01:28<00:00, 88.90s/it]Patching configurations: 100%|██████████| 1/1 [01:28<00:00, 88.90s/it]

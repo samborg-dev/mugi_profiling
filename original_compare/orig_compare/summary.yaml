@@ -1,0 +1,195 @@
+artifact:
+  baseline: 3.896045661273612
+  best uniform pwl silu:
+    ppl: 3.896045661273612
+    evals: 54
+    params:
+      ffn_segments: 20.0
+      ffn_segment_0: 3.0
+  best uniform pwl softmax:
+    ppl: 3.896045661273612
+    evals: 54
+    params:
+      attn_segments: 20.0
+      attn_segment_0: -16.0
+  best uniform pwl_mobilenet silu:
+    ppl: 3.896045661273612
+    evals: 1
+    params: {}
+  best uniform taylor softmax:
+    ppl: 3.896045661273612
+    evals: 50
+    params:
+      attn_degree_center: -9.0
+      attn_degrees: 6.0
+  best uniform vlp silu:
+    ppl: 3.896045661273612
+    evals: 90
+    params:
+      ffn_exp_dim: 8.0
+      ffn_max_pos_exp: -2.0
+      ffn_min_pos_exp: -4.0
+      ffn_lut_build: max
+  best uniform vlp softmax:
+    ppl: 3.896045661273612
+    evals: 60
+    params:
+      attn_exp_dim: 8.0
+      attn_max_exp: -2.0
+      attn_min_exp: 4.0
+      attn_lut_build: max
+  end to end vlp: 3.896045661273612
+  end to end pwl: 3.896045661273612
+  end to end taylor: 3.896045661273612
+newton:
+  uniform start (all layers max+2): 4.437332534115177
+  per-layer final: 4.246245861733686
+  layers done: 32
+newton_layers:
+- layer: 1
+  side: min
+  anchor: -7
+  ppl: 4.428192344854958
+- layer: 2
+  side: min
+  anchor: -1
+  ppl: 4.418335112531843
+- layer: 3
+  side: max
+  anchor: 1
+  ppl: 4.40285972250174
+- layer: 4
+  side: min
+  anchor: -7
+  ppl: 4.373978296383052
+- layer: 5
+  side: min
+  anchor: -6
+  ppl: 4.371756052553853
+- layer: 6
+  side: max
+  anchor: 2
+  ppl: 4.371756052553853
+- layer: 7
+  side: max
+  anchor: 1
+  ppl: 4.303657084736879
+- layer: 8
+  side: max
+  anchor: 1
+  ppl: 4.260054403283081
+- layer: 9
+  side: max
+  anchor: 2
+  ppl: 4.260054403283081
+- layer: 10
+  side: max
+  anchor: 2
+  ppl: 4.260054403283081
+- layer: 11
+  side: max
+  anchor: 1
+  ppl: 4.2527620034313856
+- layer: 12
+  side: max
+  anchor: 2
+  ppl: 4.2527620034313856
+- layer: 13
+  side: max
+  anchor: 2
+  ppl: 4.2527620034313856
+- layer: 14
+  side: min
+  anchor: -4
+  ppl: 4.252440597397967
+- layer: 15
+  side: max
+  anchor: 2
+  ppl: 4.252440597397967
+- layer: 16
+  side: max
+  anchor: 2
+  ppl: 4.252440597397967
+- layer: 17
+  side: max
+  anchor: 2
+  ppl: 4.252440597397967
+- layer: 18
+  side: max
+  anchor: 3
+  ppl: 4.251095416863032
+- layer: 19
+  side: max
+  anchor: 4
+  ppl: 4.250567395250934
+- layer: 20
+  side: max
+  anchor: 2
+  ppl: 4.250567395250934
+- layer: 21
+  side: max
+  anchor: 4
+  ppl: 4.25054408678735
+- layer: 22
+  side: max
+  anchor: 2
+  ppl: 4.25054408678735
+- layer: 23
+  side: min
+  anchor: -2
+  ppl: 4.249864143951703
+- layer: 24
+  side: max
+  anchor: 4
+  ppl: 4.2493651493125295
+- layer: 25
+  side: max
+  anchor: 4
+  ppl: 4.24928713920332
+- layer: 26
+  side: min
+  anchor: -6
+  ppl: 4.248647409029128
+- layer: 27
+  side: min
+  anchor: -6
+  ppl: 4.2483253010798085
+- layer: 28
+  side: min
+  anchor: -1
+  ppl: 4.247656853083409
+- layer: 29
+  side: max
+  anchor: 2
+  ppl: 4.247656853083409
+- layer: 30
+  side: max
+  anchor: 3
+  ppl: 4.247057364967057
+- layer: 31
+  side: max
+  anchor: 5
+  ppl: 4.246245861733686
+- layer: 32
+  side: max
+  anchor: 2
+  ppl: 4.246245861733686
+efficiency:
+  ae:
+    units: 13
+    evals: 313
+    model_loads: 13
+    load_s_median: 17.0
+    eval_s_median: 2.6296296296296298
+    wall_min_total: 36.06666666666667
+    gpu_hours: 1.2022222222222223
+    failed_attempts: 2
+  newton:
+    units: 32
+    evals: 512
+    model_loads: 32
+    load_s_median: 19.0
+    eval_s_median: 11.6875
+    wall_min_total: 116.95
+    gpu_hours: 3.8983333333333334
+    failed_attempts: 0
