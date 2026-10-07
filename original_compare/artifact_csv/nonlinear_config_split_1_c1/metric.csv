@@ -1,0 +1,2 @@
+model,modality,value,function_name,patch_attention,patch_ffn,attn_fn,ffn_fn
+weights/llama-2-7b-hf,nlp,3.896045661273612,torch,True,False,CustomSoftmax,CustomSilu
