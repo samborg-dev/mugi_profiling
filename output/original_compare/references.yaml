@@ -1,0 +1,11 @@
+best_uniform_vlp_softmax: 4.4552212759808265
+best_uniform_vlp_softmax_params:
+  attn_exp_dim: 10.0
+  attn_max_exp: 2.0
+  attn_min_exp: 4.0
+  attn_lut_build: max
+e2e:
+  vlp: 4.466880956591144
+  pwl: 3.900110743945972
+  taylor: 3.910740472076605
+missing: []

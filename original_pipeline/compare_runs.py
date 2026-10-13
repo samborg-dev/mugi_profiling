@@ -180,17 +180,36 @@ def load_newton(lab, times):
     return run, curve
 
 
-def load_artifact(lab, times):
+def load_artifact(lab, times, allow_partial=False):
     root = os.path.join(lab, 'artifact_csv')
-    frames = []
+    frames, missing = [], []
     for split, chunks in EXPECT.items():
-        path = os.path.join(root, f'nonlinear_config_split_{split}', 'metric.csv')
-        df = pd.read_csv(path)
-        check(len(df) == sum(chunks.values()), f'split_{split} has {len(df)} rows')
-        frames.append(df.assign(split=split))
+        merged = os.path.join(root, f'nonlinear_config_split_{split}', 'metric.csv')
+        if os.path.exists(merged):
+            df = pd.read_csv(merged)
+            check(len(df) == sum(chunks.values()), f'split_{split} has {len(df)} rows')
+            frames.append(df.assign(split=split))
+            continue
+        for chunk, n in chunks.items():
+            path = os.path.join(root, f'nonlinear_config_split_{split}_{chunk}', 'metric.csv')
+            if not os.path.exists(path):
+                missing.append(f'split_{split}_{chunk}')
+                continue
+            df = pd.read_csv(path)
+            check(len(df) == n, f'split_{split}_{chunk} has {len(df)} rows, expected {n}')
+            frames.append(df.assign(split=split))
+    e2e_path = os.path.join(root, 'nonlinear_e2e_config', 'metric.csv')
+    if not os.path.exists(e2e_path):
+        missing.append('e2e')
+    check(allow_partial or not missing,
+          f'Paper artifact incomplete, missing {missing}; rerun when it finishes or pass '
+          f'--allow_partial_artifact to plot what exists')
     sweep = pd.concat(frames, ignore_index=True)
-    e2e = pd.read_csv(os.path.join(root, 'nonlinear_e2e_config', 'metric.csv'))
-    check(len(e2e) == 3, f'end to end has {len(e2e)} rows')
+    if 'e2e' in missing:
+        e2e = pd.DataFrame(columns=['function_name', 'value'])
+    else:
+        e2e = pd.read_csv(e2e_path)
+        check(len(e2e) == 3, f'end to end has {len(e2e)} rows')
 
     baseline = float(sweep.loc[sweep['function_name'] == 'torch', 'value'].iloc[0])
     patched = sweep[sweep['function_name'] != 'torch']
@@ -200,7 +219,8 @@ def load_artifact(lab, times):
     check(not warnings, f'{len(warnings)} artifact results equal the unpatched baseline')
 
     units = latest_success(times, 'ae')
-    check(len(units) == 13, f'artifact has {len(units)} timed units, expected 13')
+    check(len(units) == 13 - len(missing),
+          f'artifact has {len(units)} timed units, expected {13 - len(missing)}')
     loads = (units['loop_start'] - units['start']).astype(float)
     per_eval = [(r['end'] - r['loop_start']) / (3 if r['unit'] == 'e2e' else
                                                 EXPECT[r['unit'].split('_')[1]][r['unit'].split('_')[2]])
@@ -212,7 +232,9 @@ def load_artifact(lab, times):
     e2e_by = e2e.set_index('function_name')['value'].astype(float)
 
     run = {
-        'pipeline': 'artifact', 'label': 'Paper artifact (uniform grid)',
+        'pipeline': 'artifact',
+        'label': 'Paper artifact (uniform grid)' + (f", partial: {', '.join(missing)} not yet run"
+                                                     if missing else ''),
         'coverage': 'softmax, SiLU, both', 'baseline': baseline, 'start_ppl': None,
         'final_ppl': None, 'evals': len(sweep) + len(e2e), 'loads_as_designed': 3,
         'loads_as_run': len(units), 'load_s_median': float(loads.median()),
@@ -228,6 +250,7 @@ def load_artifact(lab, times):
                                             ('attn_exp_dim', 'attn_max_exp', 'attn_min_exp',
                                              'attn_lut_build')},
         'e2e': {k: float(v) for k, v in e2e_by.items()},
+        'missing': missing,
     }
     return run, sweep, e2e, refs
 
@@ -324,8 +347,8 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
                 label=f"{by.loc[name, 'label']}: {start:.3f} → {final:.3f}, "
                       f"decreased {drop:.3f}")
         ax.plot([0], [start], 'o', ms=6, color=color, mec=SURFACE, mew=2, zorder=5)
-        ax.annotate(f'start {start:.3f}', (0, start), xytext=(8, 7), textcoords='offset points',
-                    fontsize=10, color=INK2)
+        ax.annotate(f'start {start:.3f}', (0, start), xytext=(8, 7 if name == 'newest' else -16),
+                    textcoords='offset points', fontsize=10, color=INK2)
         end_label(ax, c['layer'].iloc[-1], final, f'{final:.3f}', color)
         ax.plot([arrow_x - 0.6, arrow_x], [start, start], color=color, lw=1.2)
         ax.annotate('', xy=(arrow_x, final), xytext=(arrow_x, start),
@@ -334,19 +357,23 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
                 ha='left', fontsize=11, color=INK, weight='bold')
     ax.set_xlim(-0.8, 38.6)
 
-    references = [(baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)))]
+    references = [(baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)), 'bottom')]
     if refs:
         references += [
             (refs['best_uniform_vlp_softmax'], 'Paper artifact, best uniform window, softmax only',
-             ARTIFACT, (0, (4, 3))),
+             ARTIFACT, (0, (4, 3)), 'top'),
             (refs['e2e'].get('vlp'), 'Paper artifact, end to end VLP, softmax + SiLU', ARTIFACT,
-             (0, (1, 2))),
+             (0, (1, 2)), 'top'),
         ]
-    for value, text, color, dash in references:
+    for value, text, color, dash, va in references:
         if value is None:
             continue
+        if color == ARTIFACT:
+            ax.axhline(value, color=color, lw=1.5, linestyle=dash, zorder=1,
+                       label=f'{text}: {value:.3f}')
+            continue
         ax.axhline(value, color=color, lw=1.5, linestyle=dash, zorder=1)
-        ax.text(N_LAYERS - 0.2, value, f'{text}  {value:.3f}', va='bottom', ha='right',
+        ax.text(N_LAYERS - 0.2, value, f'{text}  {value:.3f}', va=va, ha='right',
                 fontsize=9.5, color=INK2)
 
     ax.set_ylabel('Perplexity (8 C4 documents)')
@@ -492,7 +519,7 @@ def heat_panel(ax, sweep, title, filters, row, col, ylabel, xlabel, cmap):
     df = sweep
     for key, value in filters.items():
         df = df[df[key] == value]
-    table = df.pivot_table(index=row, columns=col, values='value', aggfunc='last')
+    table = df.pivot_table(index=row, columns=col, values='value', aggfunc='last', dropna=False)
     table = table.sort_index().sort_index(axis=1)
     values = table.to_numpy(dtype=float)
     best = np.nanmin(values)
@@ -524,7 +551,7 @@ def heat_panel(ax, sweep, title, filters, row, col, ylabel, xlabel, cmap):
     return best
 
 
-def fig_heatmaps(sweep, e2e, baseline, path):
+def fig_heatmaps(sweep, e2e, baseline, path, missing=()):
     cmap = LinearSegmentedColormap.from_list('seq', RAMP)
     fig, axes = plt.subplots(2, 4, figsize=(16, 7.6), gridspec_kw={'hspace': 0.55, 'wspace': 0.3})
     flat = axes.ravel()
@@ -536,7 +563,8 @@ def fig_heatmaps(sweep, e2e, baseline, path):
     by = e2e.set_index('function_name')['value'].astype(float)
     rows = [('Base', baseline), ('VLP', by.get('vlp')), ('PWL', by.get('pwl')),
             ('T', by.get('taylor'))]
-    cell = [[name, f'{v:.3f}', f'{PAPER_E2E_100DOC[name]:.2f}'] for name, v in rows]
+    cell = [[name, 'pending' if v is None or pd.isna(v) else f'{v:.3f}',
+             f'{PAPER_E2E_100DOC[name]:.2f}'] for name, v in rows]
     table = tx.table(cellText=cell, colLabels=['', '8 docs', 'Paper (100 docs)'],
                      colWidths=[0.2, 0.32, 0.48], loc='center', cellLoc='center')
     table.auto_set_font_size(False)
@@ -550,8 +578,9 @@ def fig_heatmaps(sweep, e2e, baseline, path):
     tx.set_title('End to end (softmax + SiLU; T is softmax only)', fontsize=10.5)
     fig.suptitle('Paper artifact uniform-window sweeps on the 8 documents  -  lower is better, '
                  'best cell outlined, colour saturates at the 90th percentile, '
-                 'cells above 2x the best are blank', x=0.01, ha='left',
-                 fontsize=12, color=INK2)
+                 'cells above 2x the best are blank'
+                 + (f"\nPartial: {', '.join(missing)} not yet run" if missing else ''),
+                 x=0.01, ha='left', fontsize=12, color=INK2)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
     plt.close(fig)
@@ -593,17 +622,22 @@ def main(argv=None):
     p.add_argument('--newest', required=True)
     p.add_argument('--newest_tag', default='paired-full32-v2')
     p.add_argument('--out', default='output/original_compare')
+    p.add_argument('--allow_partial_artifact', action='store_true')
     args = p.parse_args(argv)
 
     times = pd.read_csv(os.path.join(args.lab, 'orig_compare', 'unit_times.csv'))
     newest, newest_curve, newest_trace = load_newest(args.newest, args.newest_tag)
     newton, newton_curve = load_newton(args.lab, times)
 
-    has_artifact = os.path.isdir(os.path.join(args.lab, 'artifact_csv', 'nonlinear_config_split_0'))
+    artifact_root = os.path.join(args.lab, 'artifact_csv')
+    has_artifact = os.path.isdir(artifact_root) and any(
+        d.startswith('nonlinear_config_split_') for d in os.listdir(artifact_root))
     baseline = newest['baseline']
     artifact = sweep = e2e = refs = None
     if has_artifact:
-        artifact, sweep, e2e, refs = load_artifact(args.lab, times)
+        artifact, sweep, e2e, refs = load_artifact(args.lab, times, args.allow_partial_artifact)
+        if refs['missing']:
+            print(f"PARTIAL Paper artifact: {', '.join(refs['missing'])} not yet run")
         check(abs(artifact['baseline'] - baseline) < 1e-6,
               f"baselines differ: paper artifact {artifact['baseline']} vs newest edition {baseline}")
         baseline = artifact['baseline']
@@ -630,15 +664,15 @@ def main(argv=None):
     curves.to_csv(os.path.join(args.out, 'layer_curve.csv'), index=False)
     ablation.to_csv(os.path.join(args.out, 'grid_ablation.csv'), index=False)
     if has_artifact:
-        pd.concat([sweep, e2e.assign(split='e2e')], ignore_index=True).to_csv(
-            os.path.join(args.out, 'ae_sweep.csv'), index=False)
+        parts = [sweep] + ([e2e.assign(split='e2e')] if len(e2e) else [])
+        pd.concat(parts, ignore_index=True).to_csv(os.path.join(args.out, 'ae_sweep.csv'), index=False)
         with open(os.path.join(args.out, 'references.yaml'), 'w') as f:
             yaml.safe_dump(plain(refs), f, sort_keys=False)
 
     fig_layer_curve(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'))
     fig_cost(curves, runs, os.path.join(figures, 'cost'))
     if has_artifact:
-        fig_heatmaps(sweep, e2e, baseline, os.path.join(figures, 'uniform_sweep'))
+        fig_heatmaps(sweep, e2e, baseline, os.path.join(figures, 'uniform_sweep'), refs['missing'])
     fig_windows(curves, os.path.join(figures, 'windows'))
     fig_cost_breakdown(runs, os.path.join(figures, 'cost_breakdown'))
     fig_grid_ablation(ablation, os.path.join(figures, 'grid_ablation'))
