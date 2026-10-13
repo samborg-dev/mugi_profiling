@@ -153,8 +153,9 @@ class VLPSoftmax(CustomSoftmax):
         
         # Remove inf values to increase window selection stability
         # exp_processed = torch.where((torch.isinf(attn_weights)) | (attn_weights <= -65500.0), 0, exp)
-        exp[attn_weights <= -65500.0] = 0
-        
+        masked = attn_weights <= -65500.0
+        exp[masked] = 0
+
         # Clamp exponent and adjust mantissa to fit within LUT range
         exp, mant = self.window_softmax_approx(exp, mant)
 
@@ -164,7 +165,8 @@ class VLPSoftmax(CustomSoftmax):
 
         exponentials[attn_weights == 0] = 1
         exponentials[max_exp_mask] = 0
-        del max_exp_mask
+        exponentials[masked] = 0
+        del max_exp_mask, masked
 
         # Calculate softmax output
         attn_weights = torch.sum(exponentials, dim = dim, keepdim = True)
