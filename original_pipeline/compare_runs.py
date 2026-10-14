@@ -11,6 +11,7 @@ import pandas as pd
 import yaml
 from matplotlib.colors import LinearSegmentedColormap, LogNorm
 from matplotlib.patches import Rectangle
+from matplotlib.ticker import PercentFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import newton_next
@@ -27,8 +28,17 @@ MUTED = '#898781'
 GRID = '#e1e0d9'
 BASELINE = '#c3c2b7'
 NEWEST = '#2a78d6'
+NEWEST_FIXED = '#8a4fd1'
 NEWTON = '#eb6834'
 ARTIFACT = '#1baf7a'
+COLORS = {'newest': NEWEST, 'newest_fixed': NEWEST_FIXED, 'newton': NEWTON, 'artifact': ARTIFACT}
+SEARCH_RUNS = ('newest', 'newest_fixed', 'newton')
+LABELS = {
+    'newest': 'Newest edition, original kernel (mask leak)',
+    'newest_fixed': 'Newest edition, fixed kernel',
+    'newton': 'newton edition (manual per-layer), unfixed kernel',
+    'artifact': 'Paper artifact (uniform grid), unfixed kernel',
+}
 HIGHLIGHT = '#eb6834'
 RAMP = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b']
 SIDE_FILL = {'max': '#f0efec', 'min': '#c3c2b7'}
@@ -91,7 +101,7 @@ def latest_success(times, pipeline):
     return rows.drop_duplicates(subset=['unit'], keep='last').sort_values('unit')
 
 
-def load_newest(root, tag):
+def load_newest(root, tag, pipeline='newest', expect_evals=None):
     base = os.path.join(root, 'output', 'window_search')
     with open(os.path.join(base, f'search_trace_{tag}_summary.yaml')) as f:
         data = yaml.safe_load(f)
@@ -101,32 +111,35 @@ def load_newest(root, tag):
     curve = pd.DataFrame(data['locking_curve'])
     layers = pd.DataFrame(data['layers']).sort_values('layer')
 
-    check(int(summary['n_evals']) == 65, f"newest edition n_evals {summary['n_evals']} != 65")
-    check(len(layers) == N_LAYERS, f'newest edition has {len(layers)} layer rows')
+    if expect_evals is not None:
+        check(int(summary['n_evals']) == expect_evals,
+              f"{pipeline} n_evals {summary['n_evals']} != {expect_evals}")
+    check(len(layers) == N_LAYERS, f'{pipeline} has {len(layers)} layer rows')
 
     load_s = float(summary['load_s'])
     baseline_wall = float(cost.loc[cost['assignment_hash'] == 'baseline-unpatched', 'wall_s'].iloc[0])
     seed_wall = float(cost.loc[cost['assignment_hash'] != 'baseline-unpatched', 'wall_s'].iloc[0])
     lead_s = load_s + baseline_wall + seed_wall
+    gpus = int(cost['prov_n_devices'].iloc[0]) if 'prov_n_devices' in cost.columns else GPUS
 
     accepted = trace[(~trace['is_seed']) & (trace['accepted'])].groupby('layer').size()
-    rows = [{'pipeline': 'newest', 'layer': 0, 'ppl': float(summary['seed_ppl']), 'step': 0.0,
+    rows = [{'pipeline': pipeline, 'layer': 0, 'ppl': float(summary['seed_ppl']), 'step': 0.0,
              'cumulative_evals': 1, 'cumulative_compute_s': lead_s, 'side': None,
-             'anchor': None, 'accepted': False, 'stop_reason': None}]
+             'anchor': None, 'accepted': False, 'stop_reason': None, 'searched': True}]
     by_layer = layers.set_index('layer')
     for _, r in curve[curve['n_locked'] > 0].iterrows():
         layer = int(r['layer'])
         info = by_layer.loc[layer]
-        rows.append({'pipeline': 'newest', 'layer': layer + 1, 'ppl': float(r['ppl']),
+        rows.append({'pipeline': pipeline, 'layer': layer + 1, 'ppl': float(r['ppl']),
                      'step': float(r['step']), 'cumulative_evals': 1 + int(r['cumulative_evals']),
                      'cumulative_compute_s': lead_s + float(r['cumulative_wall_s']),
                      'side': info['chosen_anchor_side'], 'anchor': int(info['chosen_anchor']),
                      'accepted': bool(accepted.get(layer, 0)),
-                     'stop_reason': info['stop_reason']})
+                     'stop_reason': info['stop_reason'], 'searched': int(info['n_evals']) > 0})
     curve_df = pd.DataFrame(rows)
 
     run = {
-        'pipeline': 'newest', 'label': 'Newest edition (automated per-layer search)',
+        'pipeline': pipeline, 'label': LABELS[pipeline], 'gpus': gpus,
         'coverage': 'softmax + SiLU', 'baseline': float(summary['baseline_ppl']),
         'start_ppl': float(summary['seed_ppl']), 'final_ppl': float(summary['final_ppl']),
         'evals': int(summary['n_evals']), 'loads_as_designed': 1, 'loads_as_run': 1,
@@ -152,7 +165,7 @@ def load_newton(lab, times):
     previous = uniform
     rows.append({'pipeline': 'newton', 'layer': 0, 'ppl': uniform, 'step': 0.0,
                  'cumulative_evals': 0, 'cumulative_compute_s': 0.0, 'side': None,
-                 'anchor': None, 'accepted': False, 'stop_reason': None})
+                 'anchor': None, 'accepted': False, 'stop_reason': None, 'searched': True})
     loads, evals_s = [], []
     for layer in range(1, N_LAYERS + 1):
         df = newton_next.candidates(layer, root)
@@ -165,11 +178,11 @@ def load_newton(lab, times):
         rows.append({'pipeline': 'newton', 'layer': layer, 'ppl': ppl, 'step': previous - ppl,
                      'cumulative_evals': layer * per_layer, 'cumulative_compute_s': cumulative_s,
                      'side': side, 'anchor': anchor, 'accepted': previous - ppl > 0,
-                     'stop_reason': None})
+                     'stop_reason': None, 'searched': True})
         previous = ppl
     curve = pd.DataFrame(rows)
     run = {
-        'pipeline': 'newton', 'label': 'newton edition (manual per-layer)',
+        'pipeline': 'newton', 'label': LABELS['newton'], 'gpus': GPUS,
         'coverage': 'softmax', 'baseline': None, 'start_ppl': uniform, 'final_ppl': previous,
         'evals': N_LAYERS * per_layer, 'loads_as_designed': N_LAYERS, 'loads_as_run': N_LAYERS,
         'load_s_median': statistics.median(loads), 'eval_s_median': statistics.median(evals_s),
@@ -232,8 +245,8 @@ def load_artifact(lab, times, allow_partial=False):
     e2e_by = e2e.set_index('function_name')['value'].astype(float)
 
     run = {
-        'pipeline': 'artifact',
-        'label': 'Paper artifact (uniform grid)' + (f", partial: {', '.join(missing)} not yet run"
+        'pipeline': 'artifact', 'gpus': GPUS,
+        'label': LABELS['artifact'] + (f", partial: {', '.join(missing)} not yet run"
                                                      if missing else ''),
         'coverage': 'softmax, SiLU, both', 'baseline': baseline, 'start_ppl': None,
         'final_ppl': None, 'evals': len(sweep) + len(e2e), 'loads_as_designed': 3,
@@ -309,7 +322,7 @@ def finish_runs(runs, baseline):
         run['compute_min'] = run['compute_s'] / 60
         run['load_min'] = run['load_s_total'] / 60
         run['eval_min'] = run['eval_s_total'] / 60
-        run['gpu_hours'] = run['compute_s'] * GPUS / 3600
+        run['gpu_hours'] = run['compute_s'] * run['gpus'] / 3600
     return pd.DataFrame(runs)
 
 
@@ -339,15 +352,30 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
     fig, (ax, bx) = plt.subplots(2, 1, figsize=(12, 6.6), sharex=True,
                                  gridspec_kw={'height_ratios': [3, 1.1], 'hspace': 0.08})
     by = runs.set_index('pipeline')
-    for (name, color), arrow_x in zip((('newest', NEWEST), ('newton', NEWTON)), (34.2, 36.6)):
-        c = curves[curves['pipeline'] == name]
+    names = [n for n in SEARCH_RUNS if n in set(curves['pipeline'])]
+    start_dy = {'newest': 7, 'newton': -16, 'newest_fixed': 7}
+    for i, name in enumerate(names):
+        color, arrow_x = COLORS[name], 34.2 + 2.4 * i
+        c = curves[curves['pipeline'] == name].reset_index(drop=True)
         start, final = float(c['ppl'].iloc[0]), float(c['ppl'].iloc[-1])
         drop = start - final
-        ax.plot(c['layer'], c['ppl'], color=color, lw=2, solid_capstyle='round',
+        searched = c[c['searched']]
+        last = int(searched.index[-1])
+        skipped = c.loc[last + 1:, 'layer']
+        note = ''
+        if len(skipped):
+            first, end = int(skipped.iloc[0]), int(skipped.iloc[-1])
+            note = (f', layer {first} not searched' if first == end
+                    else f', layers {first}–{end} not searched')
+        ax.plot(c['layer'].iloc[:last + 1], c['ppl'].iloc[:last + 1], color=color, lw=2,
+                solid_capstyle='round',
                 label=f"{by.loc[name, 'label']}: {start:.3f} → {final:.3f}, "
-                      f"decreased {drop:.3f}")
+                      f"decreased {drop:.3f}{note}")
+        if len(skipped):
+            ax.plot(c['layer'].iloc[last:], c['ppl'].iloc[last:], color=color, lw=1.5,
+                    linestyle=(0, (2, 2)))
         ax.plot([0], [start], 'o', ms=6, color=color, mec=SURFACE, mew=2, zorder=5)
-        ax.annotate(f'start {start:.3f}', (0, start), xytext=(8, 7 if name == 'newest' else -16),
+        ax.annotate(f'start {start:.3f}', (0, start), xytext=(8, start_dy[name]),
                     textcoords='offset points', fontsize=10, color=INK2)
         end_label(ax, c['layer'].iloc[-1], final, f'{final:.3f}', color)
         ax.plot([arrow_x - 0.6, arrow_x], [start, start], color=color, lw=1.2)
@@ -355,15 +383,16 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
                     arrowprops=dict(arrowstyle='-|>', color=color, lw=1.8, shrinkA=0, shrinkB=0))
         ax.text(arrow_x + 0.25, (start + final) / 2, f'−{drop:.3f}', va='center',
                 ha='left', fontsize=11, color=INK, weight='bold')
-    ax.set_xlim(-0.8, 38.6)
+    ax.set_xlim(-0.8, 34.2 + 2.4 * len(names) + 1.6)
 
-    references = [(baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)), 'bottom')]
+    references = [(baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)), 'top')]
     if refs:
         references += [
-            (refs['best_uniform_vlp_softmax'], 'Paper artifact, best uniform window, softmax only',
+            (refs['best_uniform_vlp_softmax'],
+             'Paper artifact, best uniform window, softmax only, unfixed kernel',
              ARTIFACT, (0, (4, 3)), 'top'),
-            (refs['e2e'].get('vlp'), 'Paper artifact, end to end VLP, softmax + SiLU', ARTIFACT,
-             (0, (1, 2)), 'top'),
+            (refs['e2e'].get('vlp'), 'Paper artifact, end to end VLP, softmax + SiLU, unfixed kernel',
+             ARTIFACT, (0, (1, 2)), 'top'),
         ]
     for value, text, color, dash, va in references:
         if value is None:
@@ -376,15 +405,18 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
         ax.text(N_LAYERS - 0.2, value, f'{text}  {value:.3f}', va=va, ha='right',
                 fontsize=9.5, color=INK2)
 
+    low, high = ax.get_ylim()
+    ax.set_ylim(min(low, baseline - 0.06 * (high - low)), high)
     ax.set_ylabel('Perplexity (8 C4 documents)')
     ax.set_title('Perplexity after each layer is locked', pad=12)
     ax.legend(loc='lower left', bbox_to_anchor=(0.0, 0.1), fontsize=10)
     style_axis(ax)
 
-    width = 0.38
-    for offset, (name, color) in zip((-width / 2, width / 2), (('newest', NEWEST), ('newton', NEWTON))):
+    width = 0.8 / len(names)
+    for i, name in enumerate(names):
+        offset = (i - (len(names) - 1) / 2) * width
         c = curves[(curves['pipeline'] == name) & (curves['layer'] > 0)]
-        bx.bar(c['layer'] + offset, c['step'].clip(lower=0), width=width, color=color,
+        bx.bar(c['layer'] + offset, c['step'].clip(lower=0), width=width, color=COLORS[name],
                linewidth=0)
     bx.set_ylabel('Gain at layer')
     bx.set_xlabel('Layer (0 = starting assignment)')
@@ -395,59 +427,171 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
     plt.close(fig)
 
 
-def fig_cost(curves, runs, path):
+def recovered(c, baseline):
+    start = float(c['ppl'].iloc[0])
+    return (start - c['ppl']) / (start - baseline)
+
+
+def skipped_note(c):
+    c = c.reset_index(drop=True)
+    last = int(c[c['searched']].index[-1])
+    skipped = c.loc[last + 1:, 'layer']
+    if not len(skipped):
+        return ''
+    first, end = int(skipped.iloc[0]), int(skipped.iloc[-1])
+    return f', layer {first} not searched' if first == end else f', layers {first}–{end} not searched'
+
+
+def draw_search_line(ax, c, y, color, label=None):
+    c = c.reset_index(drop=True)
+    y = y.reset_index(drop=True)
+    last = int(c[c['searched']].index[-1])
+    ax.plot(c['layer'].iloc[:last + 1], y.iloc[:last + 1], color=color, lw=2,
+            solid_capstyle='round', label=label)
+    if last < len(c) - 1:
+        ax.plot(c['layer'].iloc[last:], y.iloc[last:], color=color, lw=1.5,
+                linestyle=(0, (2, 2)))
+    ax.plot([0], [y.iloc[0]], 'o', ms=6, color=color, mec=SURFACE, mew=2, zorder=5)
+
+
+def ref_line(ax, value, text, color, dash, va='bottom'):
+    ax.axhline(value, color=color, lw=1.4, linestyle=dash, zorder=1)
+    ax.text(N_LAYERS - 0.2, value, f'{text}  {value:.3f}', va=va, ha='right', fontsize=9.5,
+            color=INK2)
+
+
+def fig_layer_curve_split(curves, runs, refs, baseline, path):
+    fig, (ax, fx, rx) = plt.subplots(3, 1, figsize=(12, 10.5), sharex=True,
+                                     gridspec_kw={'height_ratios': [2.2, 1.6, 1.8], 'hspace': 0.28})
+    by = runs.set_index('pipeline')
+    leaky = [n for n in ('newest', 'newton') if n in set(curves['pipeline'])]
+
+    for name in leaky:
+        c = curves[curves['pipeline'] == name]
+        start, final = float(c['ppl'].iloc[0]), float(c['ppl'].iloc[-1])
+        draw_search_line(ax, c, c['ppl'], COLORS[name],
+                         f"{by.loc[name, 'label']}: {start:.3f} → {final:.3f}{skipped_note(c)}")
+        end_label(ax, c['layer'].iloc[-1], final, f'{final:.3f}', COLORS[name])
+    if refs:
+        ref_line(ax, refs['best_uniform_vlp_softmax'],
+                 'Paper artifact, best uniform window, softmax only', ARTIFACT, (0, (4, 3)), 'top')
+    ref_line(ax, baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)))
+    ax.set_ylim(baseline - 0.05, None)
+    ax.set_ylabel('Perplexity')
+    ax.set_title('Leaky kernel: penalty above baseline is 0.35 to 0.83', pad=10)
+    ax.legend(loc='lower left', bbox_to_anchor=(0.0, 0.1), fontsize=10)
+    style_axis(ax)
+
+    c = curves[curves['pipeline'] == 'newest_fixed']
+    start, final = float(c['ppl'].iloc[0]), float(c['ppl'].iloc[-1])
+    draw_search_line(fx, c, c['ppl'], NEWEST_FIXED,
+                     f"{by.loc['newest_fixed', 'label']}: {start:.4f} → {final:.4f}{skipped_note(c)}")
+    end_label(fx, c['layer'].iloc[-1], final, f'{final:.4f}', NEWEST_FIXED)
+    ref_line(fx, baseline, 'Unpatched baseline', BASELINE, (0, (1, 0)), 'top')
+    values = [baseline, start, final]
+    if refs:
+        for key, text, dash in (('pwl', 'PWL softmax + SiLU (never leaked)', (0, (4, 3))),
+                                ('taylor', 'Taylor softmax + SiLU (never leaked)', (0, (1, 2)))):
+            value = refs['e2e'].get(key)
+            if value is not None:
+                ref_line(fx, value, text, ARTIFACT, dash, 'bottom' if key == 'taylor' else 'top')
+                values.append(value)
+    span = max(values) - min(values)
+    fx.set_ylim(min(values) - 0.25 * span, max(values) + 0.35 * span)
+    fx.set_ylabel('Perplexity')
+    fx.set_title(f'Fixed kernel, zoomed: penalty above baseline is {start - baseline:.3f}', pad=10)
+    fx.legend(loc='upper left', fontsize=10)
+    style_axis(fx)
+
+    for name in [n for n in SEARCH_RUNS if n in set(curves['pipeline'])]:
+        c = curves[curves['pipeline'] == name]
+        y = recovered(c, baseline)
+        draw_search_line(rx, c, y, COLORS[name])
+        end_label(rx, c['layer'].iloc[-1], y.iloc[-1], f'{y.iloc[-1]:.1%}', COLORS[name],
+                  {'newton': 6, 'newest': -6}.get(name, 0))
+    rx.set_ylim(-0.03, 1.0)
+    rx.yaxis.set_major_formatter(PercentFormatter(1.0))
+    rx.set_ylabel('Penalty recovered')
+    rx.set_title('Common scale: share of each run’s own penalty above baseline that search '
+                 'recovered', pad=10)
+    rx.set_xlabel('Layer (0 = starting assignment)')
+    rx.set_xticks(range(0, N_LAYERS + 1, 4))
+    rx.set_xlim(-0.8, N_LAYERS + 2.5)
+    style_axis(rx)
+    fig.savefig(path + '.png', bbox_inches='tight')
+    fig.savefig(path + '.pdf', bbox_inches='tight')
+    plt.close(fig)
+
+
+def fig_cost(curves, runs, path, baseline=None):
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True,
                              gridspec_kw={'wspace': 0.08})
     by = runs.set_index('pipeline')
+    fmt = (lambda v: f'{v:.1%}') if baseline is not None else (lambda v: f'{v:.3f}')
+    measure = ((lambda c: recovered(c, baseline)) if baseline is not None
+               else (lambda c: c['ppl'].iloc[0] - c['ppl']))
+    offsets = ({'cumulative_evals': (10, 30), 'cumulative_compute_s': (10, -40)}
+               if baseline is not None
+               else {'cumulative_evals': (10, -4), 'cumulative_compute_s': (10, -4)})
     for ax, column, scale, xlabel in ((axes[0], 'cumulative_evals', 1, 'Cumulative evaluations'),
                                       (axes[1], 'cumulative_compute_s', 60,
                                        'Cumulative compute minutes, model loads included')):
-        for name, color in (('newest', NEWEST), ('newton', NEWTON)):
+        for name in [n for n in SEARCH_RUNS if n in set(curves['pipeline'])]:
+            color = COLORS[name]
             c = curves[curves['pipeline'] == name]
-            gain = c['ppl'].iloc[0] - c['ppl']
+            gain = measure(c)
             x = c[column] / scale
             ax.plot(x, gain, color=color, lw=2, drawstyle='steps-post',
                     label=by.loc[name, 'label'])
-            end_label(ax, x.iloc[-1], gain.iloc[-1], f'{gain.iloc[-1]:.3f}', color)
+            end_label(ax, x.iloc[-1], gain.iloc[-1], fmt(gain.iloc[-1]), color)
         newest = by.loc['newest']
         budget = newest['evals'] if column == 'cumulative_evals' else newest['compute_s']
         newton_curve = curves[curves['pipeline'] == 'newton']
-        gain, layer = budget_point(newton_curve, column, budget)
+        reached = newton_curve[newton_curve[column] <= budget]
+        layer = int(reached['layer'].iloc[-1])
+        gain = float(measure(newton_curve).loc[reached.index[-1]])
         ax.axvline(budget / scale, color=BASELINE, lw=1.2, linestyle=(0, (3, 3)), zorder=1)
         ax.plot([budget / scale], [gain], 'o', ms=7, color=NEWTON, mec=SURFACE, mew=2, zorder=6)
         unit = 'evals' if column == 'cumulative_evals' else 'min'
         ax.annotate(f'Newest edition budget ({budget / scale:.0f} {unit}):\n'
-                    f'newton edition at layer {layer}, drop {gain:.3f}',
-                    (budget / scale, gain), xytext=(10, -4), textcoords='offset points',
-                    fontsize=9.5, color=INK2, va='top')
+                    f'newton edition at layer {layer}, '
+                    f"{'recovered' if baseline is not None else 'drop'} {fmt(gain)}",
+                    (budget / scale, gain), xytext=offsets[column], textcoords='offset points',
+                    fontsize=9.5, color=INK2, va='top' if offsets[column][1] < 0 else 'bottom')
         ax.set_xlabel(xlabel)
         ax.set_xlim(left=0)
         style_axis(ax)
-    axes[0].set_ylabel('Perplexity drop from own start')
+    if baseline is not None:
+        axes[0].yaxis.set_major_formatter(PercentFormatter(1.0))
+        axes[0].set_ylabel('Share of own penalty above baseline recovered')
+    else:
+        axes[0].set_ylabel('Perplexity drop from own start')
     axes[0].set_title('Gain against search cost', pad=12)
-    axes[0].legend(loc='lower right', fontsize=10)
+    handles, texts = axes[0].get_legend_handles_labels()
+    fig.legend(handles, texts, loc='upper center', bbox_to_anchor=(0.5, -0.02), ncol=len(texts),
+               fontsize=10)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
     plt.close(fig)
 
 
 def fig_cost_breakdown(runs, path):
-    order = [p for p in ('newest', 'newton', 'artifact') if p in set(runs['pipeline'])]
+    order = [p for p in ('newest', 'newest_fixed', 'newton', 'artifact') if p in set(runs['pipeline'])]
     by = runs.set_index('pipeline')
     fig, ax = plt.subplots(figsize=(12, 1.2 + 0.9 * len(order)))
     for i, name in enumerate(order):
         r = by.loc[name]
         ax.barh(i, r['load_min'], color=BASELINE, height=0.55, edgecolor=SURFACE, linewidth=2)
         ax.barh(i, r['eval_min'], left=r['load_min'], height=0.55, edgecolor=SURFACE, linewidth=2,
-                color={'newest': NEWEST, 'newton': NEWTON, 'artifact': ARTIFACT}[name])
+                color=COLORS[name])
         total = r['load_min'] + r['eval_min']
-        ax.text(total + 1, i, f"{total:.1f} min  =  {r['load_min']:.1f} load "
-                f"({int(r['loads_as_run'])} x)  +  {r['eval_min']:.1f} eval "
+        ax.text(total + 1, i, f"{total:.1f} min on {int(r['gpus'])} x H200  =  "
+                f"{r['load_min']:.1f} load ({int(r['loads_as_run'])} x)  +  {r['eval_min']:.1f} eval "
                 f"({int(r['evals'])} evals x {r['eval_s_median']:.1f} s)",
                 va='center', fontsize=10, color=INK2)
     ax.set_yticks(range(len(order)), [by.loc[n, 'label'] for n in order])
     ax.invert_yaxis()
-    ax.set_xlabel('Compute minutes on 2 x H200 (grey = model loading, colour = evaluation)')
+    ax.set_xlabel('Compute minutes (grey = model loading, colour = evaluation)')
     ax.set_xlim(0, by['compute_min'].max() * 1.9)
     ax.grid(axis='y', visible=False)
     ax.set_title('Where the compute goes', pad=12)
@@ -587,12 +731,20 @@ def fig_heatmaps(sweep, e2e, baseline, path, missing=()):
 
 
 def fig_windows(curves, path):
-    fig, ax = plt.subplots(figsize=(14, 2.6))
-    names = [('newest', 'Newest edition'), ('newton', 'newton edition')]
+    row_labels = {'newest': 'Newest edition, original kernel', 'newest_fixed': 'Newest edition, fixed kernel',
+                  'newton': 'newton edition, unfixed kernel'}
+    names = [(n, row_labels[n]) for n in SEARCH_RUNS if n in set(curves['pipeline'])]
+    fig, ax = plt.subplots(figsize=(14, 1.3 + 0.65 * len(names)))
+    any_skipped = False
     for row, (name, label) in enumerate(names):
         c = curves[(curves['pipeline'] == name) & (curves['layer'] > 0)]
         for _, r in c.iterrows():
             x = int(r['layer'])
+            if not r['searched']:
+                any_skipped = True
+                ax.add_patch(Rectangle((x - 0.46, row - 0.42), 0.92, 0.84, fc=SURFACE,
+                                       ec=BASELINE, lw=1, linestyle=(0, (2, 2))))
+                continue
             ax.add_patch(Rectangle((x - 0.46, row - 0.42), 0.92, 0.84,
                                    fc=SIDE_FILL[r['side']], ec=SURFACE, lw=2))
             ax.text(x, row, f"{int(r['anchor']):+d}", ha='center', va='center', fontsize=8.5,
@@ -608,8 +760,12 @@ def fig_windows(curves, path):
         spine.set_visible(False)
     ax.tick_params(length=0)
     handles = [Rectangle((0, 0), 1, 1, fc=SIDE_FILL[s], ec=BASELINE) for s in ('max', 'min')]
-    ax.legend(handles, ['anchored at max exponent', 'anchored at min exponent'],
-              loc='upper left', bbox_to_anchor=(0, -0.3), ncol=2, fontsize=9.5)
+    texts = ['anchored at max exponent', 'anchored at min exponent']
+    if any_skipped:
+        handles.append(Rectangle((0, 0), 1, 1, fc=SURFACE, ec=BASELINE, linestyle=(0, (2, 2))))
+        texts.append('not searched (time budget ran out, seed window kept)')
+    ax.legend(handles, texts, loc='upper left', bbox_to_anchor=(0, -0.3), ncol=len(texts),
+              fontsize=9.5)
     ax.set_title('Window chosen at each layer (anchor exponent)', pad=10)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
@@ -621,12 +777,21 @@ def main(argv=None):
     p.add_argument('--lab', required=True)
     p.add_argument('--newest', required=True)
     p.add_argument('--newest_tag', default='paired-full32-v2')
-    p.add_argument('--out', default='output/original_compare')
+    p.add_argument('--newest_fixed_tag', default=None)
+    p.add_argument('--out', default=None)
     p.add_argument('--allow_partial_artifact', action='store_true')
     args = p.parse_args(argv)
+    if args.out is None:
+        args.out = 'output/original_compare_maskfix' if args.newest_fixed_tag else 'output/original_compare'
 
     times = pd.read_csv(os.path.join(args.lab, 'orig_compare', 'unit_times.csv'))
-    newest, newest_curve, newest_trace = load_newest(args.newest, args.newest_tag)
+    newest, newest_curve, newest_trace = load_newest(args.newest, args.newest_tag, expect_evals=65)
+    fixed = fixed_curve = None
+    if args.newest_fixed_tag:
+        fixed, fixed_curve, _ = load_newest(args.newest, args.newest_fixed_tag, 'newest_fixed',
+                                            expect_evals=65)
+        check(abs(fixed['baseline'] - newest['baseline']) < 1e-6,
+              f"baselines differ: fixed kernel run {fixed['baseline']} vs newest edition {newest['baseline']}")
     newton, newton_curve = load_newton(args.lab, times)
 
     artifact_root = os.path.join(args.lab, 'artifact_csv')
@@ -644,8 +809,9 @@ def main(argv=None):
     else:
         print('no artifact_csv/ yet: Paper artifact references, heatmaps and cost row skipped')
 
-    runs = finish_runs([r for r in (newest, newton, artifact) if r is not None], baseline)
-    curves = pd.concat([newest_curve, newton_curve], ignore_index=True)
+    runs = finish_runs([r for r in (newest, fixed, newton, artifact) if r is not None], baseline)
+    curves = pd.concat([c for c in (newest_curve, fixed_curve, newton_curve) if c is not None],
+                       ignore_index=True)
 
     ablation = newton_grid_ablation(args.lab)
     check(abs(ablation['full_cumulative'].iloc[-1] - (newton['start_ppl'] - newton['final_ppl'])) < 1e-9,
@@ -669,8 +835,12 @@ def main(argv=None):
         with open(os.path.join(args.out, 'references.yaml'), 'w') as f:
             yaml.safe_dump(plain(refs), f, sort_keys=False)
 
-    fig_layer_curve(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'))
-    fig_cost(curves, runs, os.path.join(figures, 'cost'))
+    if fixed is not None:
+        fig_layer_curve_split(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'))
+        fig_cost(curves, runs, os.path.join(figures, 'cost'), baseline)
+    else:
+        fig_layer_curve(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'))
+        fig_cost(curves, runs, os.path.join(figures, 'cost'))
     if has_artifact:
         fig_heatmaps(sweep, e2e, baseline, os.path.join(figures, 'uniform_sweep'), refs['missing'])
     fig_windows(curves, os.path.join(figures, 'windows'))
