@@ -21,9 +21,11 @@ export HF_HOME="${HF_HOME:-/work/hdd/bebv/$USER/hf}"
 
 VENV="${VENV:-$HOME/venvs/onnx}"
 if [ ! -x "$VENV/bin/python" ]; then
-    TF_VERSION=$(python -c "import transformers; print(transformers.__version__)")
     python -m venv "$VENV" --system-site-packages
-    "$VENV/bin/pip" install --quiet "optimum-onnx>=0.1.0" "transformers==$TF_VERSION"
+fi
+if ! "$VENV/bin/python" -c "import optimum.exporters.onnx, onnx, onnxruntime" 2>/dev/null; then
+    TF_VERSION=$(python -c "import transformers; print(transformers.__version__)")
+    "$VENV/bin/pip" install --quiet "optimum-onnx>=0.1.0" onnx onnxruntime "transformers==$TF_VERSION"
 fi
 PY="$VENV/bin/python"
 "$PY" -c "import torch, transformers, optimum, onnx, onnxruntime; print('torch', torch.__version__, 'transformers', transformers.__version__, 'onnx', onnx.__version__, 'onnxruntime', onnxruntime.__version__)"
