@@ -44,14 +44,15 @@ LABELS = {
 DISPLAY = {
     'newest': 'Newest edition, unfixed kernel (mask leak)',
     'newest_fixed': 'Newest edition, fixed kernel',
-    'newton': 'newton edition (manual per-layer, Fig. 7 method), unfixed kernel',
-    'artifact': 'Paper artifact (uniform window, Fig. 6 sweep), unfixed kernel',
+    'newton': 'newton edition (lab’s original manual per-layer tuning, Fig. 7 method), unfixed kernel',
+    'artifact': 'Paper artifact (lab’s published uniform sweep, Fig. 6), unfixed kernel',
 }
 LAB_BATCHING = {'newton': '1 batch of 8 docs', 'artifact': '1 batch of 8 docs'}
 PPL_AXIS = 'Perplexity, 8 C4 docs\n(lower is better)'
-GAP_AXIS = 'Gap to unpatched model closed\n(higher is better)'
-GAP_NOTE = ('Gap closed = (start PPL − PPL now) / (start PPL − unpatched PPL).   '
+GAP_AXIS = 'Gap to the unpatched (floating-point)\nmodel closed (higher is better)'
+GAP_NOTE = ('Gap closed = (start PPL − PPL now) / (start PPL − unpatched floating-point PPL).   '
             '0% = no better than the uniform starting window,  100% = as good as the unpatched model.')
+FALSE_ACCEPT_4_BATCHES = 0.10
 EVAL_AXIS = ('Perplexity evaluations so far\n'
              '(1 evaluation = one window setting scored on all 8 documents)')
 MINUTES_AXIS = 'Wall-clock minutes so far (model loads included)'
@@ -169,7 +170,10 @@ def load_newest(root, tag, pipeline='newest', expect_evals=None):
     num_batches = int(cost['num_batches'].iloc[0])
     tried = trace[~trace['is_seed']].groupby('layer').size()
     info = {'batching': f'{num_batches} batches of {N_DOCS // num_batches} docs',
-            'tried_per_layer': int(tried.mode().iloc[0]) if len(tried) else 0}
+            'num_batches': num_batches,
+            'tried_per_layer': int(tried.mode().iloc[0]) if len(tried) else 0,
+            'candidates': int((~trace['is_seed']).sum()),
+            'accepted': int(((~trace['is_seed']) & trace['accepted']).sum())}
     return run, curve_df, trace, info
 
 
@@ -407,7 +411,7 @@ def fig_layer_curve(curves, runs, refs, baseline, path):
                 ha='left', fontsize=11, color=INK, weight='bold')
     ax.set_xlim(-0.8, 34.2 + 2.4 * len(names) + 1.6)
 
-    references = [(baseline, 'Unpatched model', BASELINE, (0, (1, 0)), 'top')]
+    references = [(baseline, 'Unpatched (floating-point) model', BASELINE, (0, (1, 0)), 'top')]
     if refs:
         references += [
             (refs['best_uniform_vlp_softmax'],
@@ -469,6 +473,18 @@ def progress_note(c):
     return ''.join(f', {n}' for n in notes)
 
 
+def chance_note(info):
+    note = (f"{info['accepted']} of {info['candidates']} candidate windows accepted, each ~0.001 PPL")
+    if info['num_batches'] == 4:
+        note += (f"; with 4 batches about {FALSE_ACCEPT_4_BATCHES * info['candidates']:.0f} would pass "
+                 f"by chance (estimate), so this is not evidence of a real gain")
+    return note
+
+
+def purpose(ax, text, y=1.02):
+    ax.text(0, y, text, transform=ax.transAxes, fontsize=9.5, color=INK2, va='bottom')
+
+
 def ppl_text(value):
     return f'{value:.3f}' if abs(value) >= 0.01 else f'{value:.4f}'
 
@@ -498,7 +514,7 @@ def ref_line(ax, value, text, color, dash, va='bottom'):
 
 def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
     fig, (ax, fx, rx) = plt.subplots(3, 1, figsize=(12, 12), sharex=True,
-                                     gridspec_kw={'height_ratios': [2.2, 1.7, 1.8], 'hspace': 0.42})
+                                     gridspec_kw={'height_ratios': [2.2, 1.7, 1.8], 'hspace': 0.5})
     leaky = [n for n in ('newest', 'newton') if n in set(curves['pipeline'])]
 
     gaps = []
@@ -513,11 +529,14 @@ def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
         ref_line(ax, refs['best_uniform_vlp_softmax'],
                  'Paper artifact, best uniform window, softmax only, unfixed kernel', ARTIFACT,
                  (0, (4, 3)), 'top')
-    ref_line(ax, baseline, 'Unpatched model', BASELINE, (0, (1, 0)))
+    ref_line(ax, baseline, 'Unpatched (floating-point) model', BASELINE, (0, (1, 0)))
     ax.set_ylim(baseline - 0.05, None)
     ax.set_ylabel(PPL_AXIS)
     ax.set_title(f'Unfixed kernel (mask leak): both runs stay {min(gaps):.3f} to {max(gaps):.3f} PPL '
-                 f'above the unpatched model', pad=10)
+                 f'above the unpatched model', pad=40)
+    purpose(ax, 'Question: how much perplexity does choosing a window per layer recover, and at which '
+                'layers?\nEach line is one pass over all 32 layers; each drop is a layer whose window '
+                'the search changed.')
     ax.legend(loc='lower left', bbox_to_anchor=(0.0, 0.1), fontsize=10)
     style_axis(ax)
 
@@ -534,7 +553,7 @@ def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
     for _, r in changed.iterrows():
         fx.annotate(f"layer {int(r['layer'])}: −{ppl_text(r['step'])}", (r['layer'], r['ppl']),
                     xytext=(6, -14), textcoords='offset points', fontsize=9.5, color=INK2)
-    ref_line(fx, baseline, 'Unpatched model', BASELINE, (0, (1, 0)), 'top')
+    ref_line(fx, baseline, 'Unpatched (floating-point) model', BASELINE, (0, (1, 0)), 'top')
     values = [baseline, start, final]
     if refs:
         for key, text, dash in (('pwl', 'Paper artifact PWL, softmax + SiLU (no mask bug)', (0, (4, 3))),
@@ -550,8 +569,8 @@ def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
     fx.set_title(f'Fixed kernel, zoomed in: starts {start - baseline:.4f} PPL above the unpatched '
                  f'model; search removes {ppl_text(start - final)}', pad=10)
     fx.legend(loc='upper left', fontsize=10)
-    fx.text(0.01, 0.40, 'Each change is about 0.001 PPL, close to what 8 documents can resolve '
-            '(estimate; see write-up).', transform=fx.transAxes, fontsize=9, color=MUTED)
+    fx.text(0.01, 0.40, chance_note(infos['newest_fixed']) + '.', transform=fx.transAxes,
+            fontsize=9, color=MUTED)
     style_axis(fx)
 
     for name in [n for n in SEARCH_RUNS if n in set(curves['pipeline'])]:
@@ -565,8 +584,10 @@ def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
     rx.yaxis.set_major_formatter(PercentFormatter(1.0))
     rx.set_ylabel(GAP_AXIS)
     rx.set_title('All runs on one scale: share of each run’s own gap to the unpatched model that '
-                 'search closed', pad=24)
-    rx.text(0, 1.03, GAP_NOTE, transform=rx.transAxes, fontsize=9, color=INK2, va='bottom')
+                 'search closed', pad=38)
+    rx.text(0, 1.03, GAP_NOTE + '\nWhere a line flattens is what window choice can recover; the '
+            'rest of the gap comes from parts of the approximation no window changes, so 100% is not '
+            'reachable this way.', transform=rx.transAxes, fontsize=9, color=INK2, va='bottom')
     rx.legend(loc='upper left', fontsize=9.5)
     rx.set_xlabel(LAYER_AXIS)
     rx.set_xticks(range(0, N_LAYERS + 1, 4))
@@ -577,7 +598,16 @@ def fig_layer_curve_split(curves, runs, refs, baseline, path, infos):
     plt.close(fig)
 
 
-def fig_cost(curves, runs, path, baseline=None):
+def plateau_index(c):
+    gain = (c['ppl'].iloc[0] - c['ppl']).reset_index(drop=True)
+    final = float(gain.iloc[-1])
+    if final <= 0:
+        return None
+    return int((gain >= 0.95 * final - 1e-12).idxmax())
+
+
+def fig_cost(curves, runs, path, baseline=None, infos=None):
+    infos = infos or {}
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 5.2), sharey=True,
                              gridspec_kw={'wspace': 0.1})
     by = runs.set_index('pipeline')
@@ -599,10 +629,16 @@ def fig_cost(curves, runs, path, baseline=None):
             color = COLORS[name]
             c = curves[curves['pipeline'] == name].reset_index(drop=True)
             x = c[column] / scale
-            ax.plot(x, measure(c), color=color, lw=2, drawstyle='steps-post',
-                    label=f"{DISPLAY[name]}, {int(by.loc[name, 'gpus'])}×H200")
+            label = f"{DISPLAY[name]}, {int(by.loc[name, 'gpus'])}×H200{progress_note(c)}"
+            if name == 'newest_fixed' and name in infos:
+                label += '\n' + chance_note(infos[name])
+            ax.plot(x, measure(c), color=color, lw=2, drawstyle='steps-post', label=label)
             end_label(ax, x.iloc[-1], float(measure(c).iloc[-1]), amount(c, -1), color,
                       end_dy.get(name, 0))
+            k = plateau_index(c)
+            if k is not None:
+                ax.plot([x.iloc[k]], [float(measure(c).iloc[k])], 'D', ms=8, mfc=SURFACE, mec=color,
+                        mew=2, zorder=7)
         newest = by.loc['newest']
         if column == 'cumulative_evals':
             budget = newest['evals']
@@ -635,14 +671,36 @@ def fig_cost(curves, runs, path, baseline=None):
         axes[0].set_ylabel(GAP_AXIS)
     else:
         axes[0].set_ylabel("Perplexity reduction from the run's own start\n(higher is better)")
-    axes[0].set_title('Search progress against cost', pad=46)
-    note = ('Each line is one pass over all 32 layers. Each step up is a layer whose window the '
+    newest, newton = by.loc['newest'], by.loc['newton']
+    axes[0].set_title('Search progress against cost', pad=74 if normalized else 58)
+    note = ('Question: does automating the per-layer search recover a similar share of accuracy for '
+            'less compute?\n'
+            f"Shows: one full pass costs the Newest edition {newest['evals']:.0f} evaluations and "
+            f"{newest['compute_min']:.0f} min, the newton edition {newton['evals']:.0f} and "
+            f"{newton['compute_min']:.0f} min (~{newton['evals'] / newest['evals']:.0f}× and "
+            f"~{newton['compute_min'] / newest['compute_min']:.0f}×). "
+            'Accuracy is only comparable within the same kernel.\n'
+            'Each line is one pass over all 32 layers. Each step up is a layer whose window the '
             'search changed. Up and to the left is better.')
     if normalized:
         note += '\n' + GAP_NOTE
-    axes[0].text(0, 1.03, note, transform=axes[0].transAxes, fontsize=9.5, color=INK2, va='bottom')
+    axes[0].text(0, 1.03, note, transform=axes[0].transAxes, fontsize=9.5, color=INK2, va='bottom',
+                 linespacing=1.35)
+    short = {'newest': 'Newest edition, unfixed kernel', 'newest_fixed': 'Newest edition, fixed kernel',
+             'newton': 'newton edition'}
+    marks = []
+    for name in names:
+        c = curves[curves['pipeline'] == name].reset_index(drop=True)
+        k = plateau_index(c)
+        if k is not None:
+            marks.append(f"{short[name]}: evaluation {int(c['cumulative_evals'].iloc[k])} of "
+                         f"{int(c['cumulative_evals'].iloc[-1])} (layer {int(c['layer'].iloc[k])})")
+    axes[0].text(0, -0.31, 'Hollow diamonds: where each run first reached 95% of its own final gain.  '
+                 + ';   '.join(marks) + '.\nThat point is only known after the fact: the search cannot '
+                 'tell in advance that later layers will not help, which is why it runs every layer.',
+                 transform=axes[0].transAxes, fontsize=9, color=MUTED, va='top')
     handles, texts = axes[0].get_legend_handles_labels()
-    fig.legend(handles, texts, loc='upper center', bbox_to_anchor=(0.5, -0.04), ncol=1,
+    fig.legend(handles, texts, loc='upper center', bbox_to_anchor=(0.5, -0.17), ncol=1,
                fontsize=10)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
@@ -673,7 +731,11 @@ def fig_cost_breakdown(runs, path, infos):
     ax.set_xlabel('Wall-clock minutes for the whole run')
     ax.set_xlim(0, by['compute_min'].max() * 2.3)
     ax.grid(axis='y', visible=False)
-    ax.set_title('Where each run’s time goes: model loading vs. evaluations', pad=12)
+    load_share = (by['load_min'] / by['compute_min']).max()
+    ax.set_title('Where each run’s time goes: model loading vs. evaluations', pad=40)
+    purpose(ax, 'Question: is the cost of a search driven by reloading the model or by evaluating '
+                'windows?\nShows: by evaluations. Model loading (grey) is at most '
+                f'{load_share:.0%} of any run, so the lever is how many evaluations a search needs.')
     handles = [Rectangle((0, 0), 1, 1, fc=BASELINE),
                tuple(Rectangle((0, 0), 1, 1, fc=COLORS[n]) for n in order)]
     ax.legend(handles, ['Model loading', 'Perplexity evaluations (bar colour = run, as in the other charts)'],
@@ -699,7 +761,12 @@ def fig_grid_ablation(ablation, path):
               NEWTON, dy=-7)
     ax.set_ylabel('Perplexity reduction from the\nuniform start, cumulative\n(higher is better)')
     ax.set_title('How much the 3-window grid gives up, measured on newton edition data '
-                 '(unfixed kernel)', pad=12)
+                 '(unfixed kernel)', pad=40)
+    worst = sorted(int(l) for l in ablation.nlargest(3, 'shortfall')['layer'])
+    purpose(ax, 'Question: does trying only 3 windows per layer (the Newest edition grid) miss much of '
+                'what trying all 16 finds?\nShows: the 3-window grid keeps '
+                f'{grid[-1] / full[-1]:.0%} of the gain; the largest shortfalls are at layers '
+                f'{worst[0]}, {worst[1]} and {worst[2]}.')
     ax.legend(loc='lower right', fontsize=10)
     style_axis(ax)
     bx.bar(ablation['layer'], ablation['shortfall'], width=0.6, color=NEWTON, linewidth=0)
@@ -737,7 +804,12 @@ def fig_landscape(matrix, picks, labels, path):
     bar = fig.colorbar(image, ax=ax, fraction=0.04, pad=0.02)
     bar.set_label('Perplexity above the best window at that layer (log scale)')
     bar.outline.set_visible(False)
-    ax.set_title('Every window the newton edition tried, per layer (unfixed kernel)', pad=12)
+    runner_up = np.sort(matrix, axis=1)[:, 1]
+    tied = int((runner_up < 1e-3).sum())
+    ax.set_title('Every window the newton edition tried, per layer (unfixed kernel)', pad=40)
+    purpose(ax, 'Question: at each layer, does one window clearly win, or are several about equal?\n'
+                f'Shows: at {tied} of {N_LAYERS} layers the runner-up is within 1e-3 PPL of the best, '
+                'so the pick there is effectively a tie.')
     ax.text(0, -0.15, 'Orange = window picked. Dashed box = the Newest edition grid (max+1..max+3). '
             'Gaps under about 1e-3 are not resolvable on 8 documents (estimate).',
             transform=ax.transAxes, fontsize=9, color=MUTED)
@@ -758,7 +830,11 @@ def heat_panel(ax, sweep, title, filters, row, col, ylabel, xlabel, cmap):
     lo = best
     hi = float(np.nanpercentile(masked, 90))
     hi = hi if hi > lo else lo + 1e-9
-    ax.imshow(masked, cmap=cmap, aspect='auto', interpolation='nearest', vmin=lo, vmax=hi)
+    image = ax.imshow(masked, cmap=cmap, aspect='auto', interpolation='nearest', vmin=lo, vmax=hi)
+    bar = ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.03)
+    bar.set_label('PPL', fontsize=8, color=INK2)
+    bar.ax.tick_params(labelsize=7, length=0)
+    bar.outline.set_visible(False)
     size = 7.5 if values.shape[1] <= 7 else 5.6
     for i in range(values.shape[0]):
         for j in range(values.shape[1]):
@@ -784,7 +860,7 @@ def heat_panel(ax, sweep, title, filters, row, col, ylabel, xlabel, cmap):
 
 def fig_heatmaps(sweep, e2e, baseline, path, missing=()):
     cmap = LinearSegmentedColormap.from_list('seq', RAMP)
-    fig, axes = plt.subplots(2, 4, figsize=(16, 7.6), gridspec_kw={'hspace': 0.55, 'wspace': 0.3})
+    fig, axes = plt.subplots(2, 4, figsize=(17, 7.6), gridspec_kw={'hspace': 0.55, 'wspace': 0.5})
     flat = axes.ravel()
     for ax, spec in zip(flat, HEATMAPS):
         heat_panel(ax, sweep, *spec, cmap=cmap)
@@ -807,13 +883,15 @@ def fig_heatmaps(sweep, e2e, baseline, path, missing=()):
         if r == 0:
             cell_obj.set_text_props(color=INK2, weight='bold')
     tx.set_title('End to end (softmax + SiLU; T is softmax only)', fontsize=10.5)
-    fig.suptitle('Paper artifact uniform-window sweeps on the 8 documents: perplexity, lower is better. '
+    fig.suptitle('Question: how good is the best single window for every layer, and how do VLP, PWL and '
+                 'Taylor compare on the same documents?\n'
+                 'Paper artifact uniform-window sweeps on the 8 documents: perplexity, lower is better. '
                  'Best cell outlined; colour saturates at the 90th percentile; '
                  'blank = above 2× the best or diverged (NaN).\n'
                  'VLP softmax panels and the end-to-end VLP value use the unfixed softmax kernel '
                  '(mask leak), so they are inflated. SiLU, PWL and Taylor panels are unaffected.'
                  + (f"\nPartial: {', '.join(missing)} not yet run" if missing else ''),
-                 x=0.01, ha='left', fontsize=12, color=INK2)
+                 x=0.01, y=1.04, ha='left', fontsize=12, color=INK2)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
     plt.close(fig)
@@ -861,7 +939,17 @@ def fig_windows(curves, path):
             'edition’s 16\n(both slide an 8-wide window inside it), so the same number is not the '
             'same window across editions.',
             transform=ax.transAxes, fontsize=9, color=MUTED, va='top')
-    ax.set_title('Window chosen at each layer', pad=10)
+    ax.set_title('Window chosen at each layer', pad=40)
+    shows = ''
+    if 'newest_fixed' in set(curves['pipeline']):
+        fx = curves[(curves['pipeline'] == 'newest_fixed') & (curves['layer'] > 0)]
+        kept = int(((fx['side'] == 'max') & (fx['anchor'] == 2)).sum())
+        nw = curves[(curves['pipeline'] == 'newton') & (curves['layer'] > 0)]
+        moved = int(len(nw) - ((nw['side'] == 'max') & (nw['anchor'] == 2)).sum())
+        shows = (f'\nShows: on the fixed kernel the search kept the starting window (max +2) at {kept} of '
+                 f'{N_LAYERS} layers; the newton edition, on the unfixed kernel, moved {moved} of '
+                 f'{N_LAYERS} away from it.')
+    purpose(ax, 'Question: which LUT window did each search settle on at each layer?' + shows)
     fig.savefig(path + '.png', bbox_inches='tight')
     fig.savefig(path + '.pdf', bbox_inches='tight')
     plt.close(fig)
@@ -934,10 +1022,10 @@ def main(argv=None):
 
     if fixed is not None:
         fig_layer_curve_split(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'), infos)
-        fig_cost(curves, runs, os.path.join(figures, 'cost'), baseline)
+        fig_cost(curves, runs, os.path.join(figures, 'cost'), baseline, infos)
     else:
         fig_layer_curve(curves, runs, refs, baseline, os.path.join(figures, 'per_layer'))
-        fig_cost(curves, runs, os.path.join(figures, 'cost'))
+        fig_cost(curves, runs, os.path.join(figures, 'cost'), infos=infos)
     if has_artifact:
         fig_heatmaps(sweep, e2e, baseline, os.path.join(figures, 'uniform_sweep'), refs['missing'])
     fig_windows(curves, os.path.join(figures, 'windows'))
