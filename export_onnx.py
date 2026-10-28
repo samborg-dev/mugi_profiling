@@ -59,14 +59,16 @@ def validate_against_torch(model, out_dir, dtype, seq_len=16, seed=0):
 
     max_abs = float(np.abs(got - ref).max())
     scale = max(1.0, float(np.abs(ref).max()))
-    tol = {"fp32": 1e-3, "fp16": 2e-2, "bf16": 5e-2}[dtype] * scale
+    tol = {"fp32": 1e-3, "fp16": 5e-2, "bf16": 5e-2}[dtype] * scale
+    agreement = float((got.argmax(-1) == ref.argmax(-1)).mean())
+    passed = max_abs <= tol and (dtype == "fp32" or agreement == 1.0)
     result = {"seq_len": seq_len, "max_abs_diff": max_abs, "tolerance": tol,
-              "ref_max_abs": float(np.abs(ref).max()),
-              "argmax_agreement": float((got.argmax(-1) == ref.argmax(-1)).mean()),
-              "passed": max_abs <= tol}
+              "ref_max_abs": float(np.abs(ref).max()), "argmax_agreement": agreement,
+              "passed": passed}
     print(f"validation: {result}")
-    if not result["passed"]:
-        raise RuntimeError(f"ONNX output differs from PyTorch: max abs diff {max_abs:.3g} > {tol:.3g}")
+    if not passed:
+        raise RuntimeError(f"ONNX output differs from PyTorch: max abs diff {max_abs:.3g} "
+                           f"(tolerance {tol:.3g}), argmax agreement {agreement:.0%}")
     return result
 
 

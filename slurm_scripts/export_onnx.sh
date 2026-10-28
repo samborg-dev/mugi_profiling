@@ -45,6 +45,7 @@ run() {
 run --model hf-internal-testing/tiny-random-LlamaForCausalLM --out "$ROOT/tiny-smoke" --validate
 run --model "$MODEL" --out "$ROOT/$NAME-fp32-1layer" --layers 1 --dtype fp32 --device cuda --validate
 run --model "$MODEL" --out "$ROOT/$NAME-fp16-1layer" --layers 1 --dtype fp16 --device cuda --validate
+rm -rf "$ROOT/$NAME-fp16"
 run --model "$MODEL" --out "$ROOT/$NAME-fp16" --dtype fp16 --device cuda --validate
 
 chmod -R g+rX "$ROOT/$NAME-fp16" "$ROOT/$NAME-fp16-1layer" "$ROOT/$NAME-fp32-1layer"
