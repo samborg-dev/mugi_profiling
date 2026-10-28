@@ -1,0 +1,262 @@
+{
+  "model": "NousResearch/Llama-2-7b-hf",
+  "task": "text-generation",
+  "dtype": "fp16",
+  "attn": "eager",
+  "layers": 32,
+  "validation": {
+    "seq_len": 16,
+    "max_abs_diff": 0.5703125,
+    "tolerance": 1.0609375,
+    "ref_max_abs": 21.21875,
+    "argmax_agreement": 1.0,
+    "passed": true
+  },
+  "opset": 17,
+  "ir_version": 8,
+  "inputs": {
+    "input_ids": [
+      [
+        "batch_size",
+        "sequence_length"
+      ],
+      "int64"
+    ],
+    "attention_mask": [
+      [
+        "batch_size",
+        "sequence_length"
+      ],
+      "int64"
+    ],
+    "position_ids": [
+      [
+        "batch_size",
+        "sequence_length"
+      ],
+      "int64"
+    ]
+  },
+  "outputs": {
+    "logits": [
+      [
+        "batch_size",
+        "sequence_length",
+        32000
+      ],
+      "float16"
+    ]
+  },
+  "nodes": 4708,
+  "initializers": 291,
+  "weight_bytes": 13476831232,
+  "external_data": true,
+  "op_counts": {
+    "Constant": 1612,
+    "Unsqueeze": 432,
+    "Mul": 359,
+    "Cast": 334,
+    "MatMul": 290,
+    "Add": 226,
+    "Concat": 196,
+    "Shape": 168,
+    "Gather": 167,
+    "Transpose": 161,
+    "Slice": 160,
+    "Reshape": 132,
+    "Div": 129,
+    "Pow": 65,
+    "ReduceMean": 65,
+    "Sqrt": 65,
+    "Neg": 64,
+    "Softmax": 32,
+    "Sigmoid": 32,
+    "Range": 3,
+    "ConstantOfShape": 3,
+    "Where": 3,
+    "And": 2,
+    "Equal": 2,
+    "Expand": 2,
+    "LessOrEqual": 1,
+    "Flatten": 1,
+    "Cos": 1,
+    "Sin": 1
+  },
+  "decoder_layers": 32,
+  "layers_identical": false,
+  "representative_layer": 1,
+  "layer_deviations": {
+    "0": {
+      "self_attn/Constant": 2,
+      "self_attn/Unsqueeze": 2
+    }
+  },
+  "per_layer_ops": {
+    "input_layernorm": {
+      "Constant": 3,
+      "Cast": 2,
+      "Mul": 2,
+      "Pow": 1,
+      "ReduceMean": 1,
+      "Add": 1,
+      "Sqrt": 1,
+      "Div": 1
+    },
+    "self_attn": {
+      "Constant": 35,
+      "Unsqueeze": 13,
+      "MatMul": 6,
+      "Concat": 6,
+      "Cast": 6,
+      "Shape": 5,
+      "Gather": 5,
+      "Transpose": 5,
+      "Mul": 5,
+      "Slice": 5,
+      "Reshape": 4,
+      "Add": 3,
+      "Div": 2,
+      "Neg": 2,
+      "Softmax": 1
+    },
+    "residual": {
+      "Add": 2
+    },
+    "post_attention_layernorm": {
+      "Constant": 3,
+      "Cast": 2,
+      "Mul": 2,
+      "Pow": 1,
+      "ReduceMean": 1,
+      "Add": 1,
+      "Sqrt": 1,
+      "Div": 1
+    },
+    "mlp": {
+      "MatMul": 3,
+      "Mul": 2,
+      "Sigmoid": 1
+    }
+  },
+  "outside_layer_ops": {
+    "Constant": 298,
+    "Cast": 14,
+    "Unsqueeze": 14,
+    "Shape": 8,
+    "Gather": 7,
+    "Mul": 7,
+    "Reshape": 4,
+    "Concat": 4,
+    "Range": 3,
+    "ConstantOfShape": 3,
+    "Where": 3,
+    "And": 2,
+    "Add": 2,
+    "Equal": 2,
+    "Expand": 2,
+    "MatMul": 2,
+    "LessOrEqual": 1,
+    "Flatten": 1,
+    "Transpose": 1,
+    "Cos": 1,
+    "Sin": 1,
+    "Pow": 1,
+    "ReduceMean": 1,
+    "Sqrt": 1,
+    "Div": 1
+  },
+  "gemms_per_layer": [
+    {
+      "node": "/model/layers.1/self_attn/q_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        4096
+      ]
+    },
+    {
+      "node": "/model/layers.1/self_attn/k_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        4096
+      ]
+    },
+    {
+      "node": "/model/layers.1/self_attn/v_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        4096
+      ]
+    },
+    {
+      "node": "/model/layers.1/self_attn/MatMul",
+      "layer": 1,
+      "kind": "activation x activation",
+      "weight_shape": null
+    },
+    {
+      "node": "/model/layers.1/self_attn/MatMul_1",
+      "layer": 1,
+      "kind": "activation x activation",
+      "weight_shape": null
+    },
+    {
+      "node": "/model/layers.1/self_attn/o_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        4096
+      ]
+    },
+    {
+      "node": "/model/layers.1/mlp/gate_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        11008
+      ]
+    },
+    {
+      "node": "/model/layers.1/mlp/up_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        11008
+      ]
+    },
+    {
+      "node": "/model/layers.1/mlp/down_proj/MatMul",
+      "layer": 1,
+      "kind": "weight",
+      "weight_shape": [
+        11008,
+        4096
+      ]
+    }
+  ],
+  "gemms_outside_layers": [
+    {
+      "node": "/model/rotary_emb/MatMul",
+      "layer": null,
+      "kind": "activation x activation",
+      "weight_shape": null
+    },
+    {
+      "node": "/lm_head/MatMul",
+      "layer": null,
+      "kind": "weight",
+      "weight_shape": [
+        4096,
+        32000
+      ]
+    }
+  ]
+}
