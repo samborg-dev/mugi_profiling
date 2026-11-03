@@ -3,7 +3,7 @@
 - Task `text-generation`, dtype `fp16`, attention `eager`, opset 17, IR 8
 - 275 nodes, 12 initializers, 0.93 GB of weights (embedded)
 - 1 decoder layers, all with the identical op pattern below
-- Validated against PyTorch on 16 random tokens: max |logit diff| 7.81e-03 (tolerance 2.07e-01), next-token argmax agreement 100%
+- Validated against PyTorch on 16 random tokens: max |logit diff| 7.81e-03 (tolerance 5.16e-01), next-token argmax agreement 100%
 
 ## Inputs
 
