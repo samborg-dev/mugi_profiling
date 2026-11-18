@@ -26,14 +26,21 @@ MODES = {
     'alt_sm_below_one': {'sm_below_slide': 'one', 'sm_below_lut': 'one'},
     'alt_ffn_below_half': {'ffn_pos_below': 'half', 'ffn_neg_below': 'half'},
     'alt_ffn_slide_zero': {'ffn_below_slide': 'zero'},
+    'shift_anchor3': {},
+    'edge_sm_above': {'sm_above_lut': 'edge'},
+    'const9_sm_above': {'sm_above_lut': math.exp(-9)},
+    'const10_sm_above': {'sm_above_lut': math.exp(-10)},
 }
 
-FIELDS = ['exp_dim', 'mode', 'ppl', 'gain_vs_as_is', 'paired_ci_low', 'paired_ci_high',
+SM_ANCHOR = {'shift_anchor3': 3}
+DEFAULT_SM_ANCHOR = 2
+
+FIELDS = ['exp_dim', 'sm_anchor', 'mode', 'ppl', 'gain_vs_as_is', 'paired_ci_low', 'paired_ci_high',
           'num_batches', 'n_tokens', 'input_hash', 'wall_s', 'batch_losses']
 STAT_FIELDS = ['exp_dim', 'layer', 'site', 'category', 'count', 'n_unmasked', 'fraction',
-               'exact_mass_per_row']
+               'exact_mass_per_row', 'exact_mean_value']
 
-STATE = {'mode': {}, 'stats': False, 'counts': None, 'mass': None, 'rows': None}
+STATE = {'mode': {}, 'stats': False, 'counts': None, 'mass': None, 'rows': None, 'raw': None}
 
 
 def softmax_categories(self, raw, window_exp, max_exp_mask, masked, zero):
@@ -93,6 +100,10 @@ def softmax_nonlinear(self, attn_weights, dim=-1, dtype=torch.bfloat16):
                 exponentials[sel] = torch.exp(attn_weights[sel].float()).to(exponentials.dtype)
             elif rule == 'one':
                 exponentials[sel] = 1
+            elif rule == 'edge':
+                exponentials[sel] = self.lut[-1, -1]
+            elif isinstance(rule, float):
+                exponentials[sel] = rule
         del cats
     del zero
 
@@ -158,16 +169,17 @@ def silu_nonlinear(self, x):
 
 def record_softmax(layer, cats, attn_weights, masked, dim):
     unmasked = int((~masked).sum().item())
-    probs = torch.exp(attn_weights.float()).masked_fill(masked, 0.0)
-    probs = probs / probs.sum(dim=dim, keepdim=True)
+    raw = torch.exp(attn_weights.float()).masked_fill(masked, 0.0)
+    probs = raw / raw.sum(dim=dim, keepdim=True)
     rows = probs.numel() // probs.shape[dim]
     for cat, sel in cats.items():
         key = (layer, 'attention', cat)
         STATE['counts'][key][0] += int(sel.sum().item())
         STATE['counts'][key][1] += unmasked
         STATE['mass'][key] += float(probs[sel].sum().item())
+        STATE['raw'][key] += float(raw[sel].sum().item())
         STATE['rows'][key] += rows
-    del probs
+    del probs, raw
 
 
 def record_silu(layer, cats, x):
@@ -229,6 +241,7 @@ def self_check():
         STATE['stats'] = True
         STATE['counts'] = defaultdict(lambda: [0, 0])
         STATE['mass'] = defaultdict(float)
+        STATE['raw'] = defaultdict(float)
         STATE['rows'] = defaultdict(int)
         sm.nonlinear(scores.clone())
         fn.nonlinear(acts.clone())
@@ -333,20 +346,22 @@ def main(argv=None):
                          'wall_s': round(harness.baseline_result.wall_s, 2),
                          'batch_losses': ' '.join(repr(v) for v in harness.baseline_result.batch_losses)})
         for exp_dim in [int(d) for d in args.exp_dims.split(',')]:
-            assignment = harness.uniform(SoftmaxWindow(exp_dim=exp_dim, anchor=2),
-                                         FfnWindow(exp_dim=exp_dim, pos_anchor=2, neg_anchor=2))
+            ffn = FfnWindow(exp_dim=exp_dim, pos_anchor=2, neg_anchor=2)
             reference = None
             for mode in modes:
+                sm_anchor = SM_ANCHOR.get(mode, DEFAULT_SM_ANCHOR)
+                assignment = harness.uniform(SoftmaxWindow(exp_dim=exp_dim, anchor=sm_anchor), ffn)
                 STATE['mode'] = MODES[mode]
                 STATE['stats'] = mode == 'as_is'
                 if STATE['stats']:
                     STATE['counts'] = defaultdict(lambda: [0, 0])
                     STATE['mass'] = defaultdict(float)
+                    STATE['raw'] = defaultdict(float)
                     STATE['rows'] = defaultdict(int)
                 result = harness.evaluate(assignment)
                 STATE['mode'] = {}
                 losses = list(result.batch_losses)
-                row = {'exp_dim': exp_dim, 'mode': mode, 'ppl': result.ppl,
+                row = {'exp_dim': exp_dim, 'sm_anchor': sm_anchor, 'mode': mode, 'ppl': result.ppl,
                        'num_batches': result.num_batches, 'n_tokens': result.n_tokens,
                        'input_hash': result.input_hash, 'wall_s': round(result.wall_s, 2),
                        'batch_losses': ' '.join(repr(v) for v in losses)}
@@ -368,7 +383,9 @@ def main(argv=None):
                             'exp_dim': exp_dim, 'layer': layer, 'site': site, 'category': cat,
                             'count': count, 'n_unmasked': n, 'fraction': count / n if n else '',
                             'exact_mass_per_row': (STATE['mass'][key] / STATE['rows'][key]
-                                                   if STATE['rows'].get(key) else '')})
+                                                   if STATE['rows'].get(key) else ''),
+                            'exact_mean_value': (STATE['raw'][key] / count
+                                                 if site == 'attention' and count else '')})
                     STATE['stats'] = False
                 else:
                     ci = paired_ppl_ci(reference, losses)
